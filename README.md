@@ -46,12 +46,16 @@ Reddit:
 - Subforum
   - Public/Private
   - Subforum Owner special permissions/settings
+  
+  Marketplace:
 - Listing for Item
   - Price
   - Pictures
   - Description/Title
   - Quick Appearance
   - Seller feedback/ratings
+
+  Shared:
 - User Customization
   - profile picture customization features
   - Bio text limit
@@ -71,5 +75,44 @@ Reddit:
     - can search posts
 
 Level 8 specifications:
+
+Everyone is a full stack engineer here!
+We do not care if you like front end or backend
+We will all be doing everything and learning everything
+
+1) create one central gmail account for our group
+  - this will serve as our admit account for everything
+  - everyone will have access to this account
+
+  - create SQL database
+    - host on azure
+      - cosmos DB? free 25 Gb + 1000 RU/s
+    - write to entire group in new channel:
+      - how to use the database and stuff
+      - how to interact with the API's
+      - how to create table and table relations (MOST IMPORTANT)
+      - anything else you deem necessary to be able to work with the database
+
+  - front page
+    - start with a blank home page
+    - until we implement the other stuff
+    - first implementation:
+      - 4 options at the bottom:
+        - reddit
+        - marketplace
+        - settings
+        - in the middle: option to create post (+ botton)
+      - search bar at the top
+      - top right messages button
+  
+  Reddit:
+  marketplace:
+  settings:
+  + botton:
+  search bar:
+  messaging system:
+  logging in:
+  creating accounts:
+  user permissions (no account or account):
 
 
