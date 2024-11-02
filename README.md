@@ -5,6 +5,7 @@ Haider Abdelrahman, Lukas Arteni, Kashvi Chandwani, Lukas Chang, Romit Ghosh, Da
 
 Level 1 specifications:
 Have a rutgers social platform
+
 Level 2 specifications:
 reddit type platform
 
@@ -106,13 +107,51 @@ We will all be doing everything and learning everything
       - top right messages button
   
   Reddit:
+    - create all required SQL tables as you move through what you need
+      - or adjust already created tables for new info you should add
+    - have user-based recommendation sub-reddits as the first reddit interaction
+    - implement like button and dislike button on each post and put them in a nice place
+      - pressing like and dislike button will call an API that will update the database to rank post visibility priority
+          - 
+      - implement clicking on post and it pops up in its own page
+        - that page will have commenting capabilities for logged in users
+        - comments can also be liked or disliked, and also replied to 
+
   marketplace:
+    - create all required SQL tables as you move through what you need
+      - or adjust already created tables for new info you should add
+    - have marketplace posts as the first marketplace interaction
+      - sorted by most popular through most viewed (clicked on full post)
+
   settings:
-  + botton:
+    - create all required SQL tables as you move through what you need
+      - or adjust already created tables for new info you should add
+    - user settings
+      - username
+        - netid-based (immutable)
+      - password
+        - netid-based (mutable through Rutgers Netid)
+
+
+  + bottom:
+    - no databases needed for this one
+
   search bar:
+    - no databases needed for this one
+
   messaging system:
+    - create all required SQL tables as you move through what you need
+      - or adjust already created tables for new info you should add
+
   logging in:
+    - create all required SQL tables as you move through what you need
+      - or adjust already created tables for new info you should add
+
   creating accounts:
+    - create all required SQL tables as you move through what you need
+      - or adjust already created tables for new info you should add
+  
   user permissions (no account or account):
+    - no databases needed for this one
 
 
