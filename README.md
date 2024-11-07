@@ -4,7 +4,7 @@ Our group:
 Haider Abdelrahman, Lukas Arteni, Kashvi Chandwani, Lukas Chang, Romit Ghosh, Daniel Li, Jason Merchan, and Yousef Naam
 
 Level 1 specifications:
-Have a rutgers social platform
+Have a social platform
 
 Level 2 specifications:
 reddit type platform
@@ -87,7 +87,7 @@ We will all be doing everything and learning everything
 
   - create SQL database
     - host on azure
-      - cosmos DB? free 25 Gb + 1000 RU/s
+      - Azure DB? 
     - write to entire group in new channel:
       - how to use the database and stuff
       - how to interact with the API's
@@ -105,6 +105,7 @@ We will all be doing everything and learning everything
         - in the middle: option to create post (+ botton)
       - search bar at the top
       - top right messages button
+      - top left profile image/button to profile page
   
   Reddit:
     - create all required SQL tables as you move through what you need
@@ -131,9 +132,10 @@ We will all be doing everything and learning everything
         - netid-based (immutable)
       - password
         - netid-based (mutable through Rutgers Netid)
+      - sign out
 
 
-  + bottom:
+  bottom:
     - no databases needed for this one
 
   search bar:
@@ -146,12 +148,13 @@ We will all be doing everything and learning everything
   logging in:
     - create all required SQL tables as you move through what you need
       - or adjust already created tables for new info you should add
+    - fetch user preferences based on 
 
   creating accounts:
     - create all required SQL tables as you move through what you need
       - or adjust already created tables for new info you should add
+    - add new user to user table
+      - add date-created, username, 
   
   user permissions (no account or account):
     - no databases needed for this one
-
-
