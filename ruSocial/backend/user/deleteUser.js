@@ -9,22 +9,14 @@ exports.handler = async (event) => {
     database: process.env.DB_NAME,
   };
 
-  // Validate the 'credentials' header
-  // credentials=username:password
-  const credentials = event.headers.credentials;
-  if (!credentials) {
-    return {
-      statusCode: 403,
-      body: JSON.stringify({ message: 'Missing credentials' }),
-    };
-  }
+  // Parse input data from the event
+  const { user_id } = JSON.parse(event.body); // Assuming 'user_id' is used to identify the user to delete
 
-  // Parse the 'credentials' header into username and password
-  const [username, password] = credentials.split(':');
-  if (!username || !password) {
+  // Check if the required data is provided
+  if (!user_id) {
     return {
-      statusCode: 403,
-      body: JSON.stringify({ message: 'Invalid credentials format. Expected {username}:{password}' }),
+      statusCode: 400,
+      body: JSON.stringify({ message: 'Missing required field: user_id' }),
     };
   }
 
@@ -35,7 +27,7 @@ exports.handler = async (event) => {
 
     // Delete the user from the users table based on user_id
     const query = `
-      DELETE FROM forum_posts
+      DELETE FROM users
       WHERE id = ?
     `;
     const [result] = await connection.execute(query, [user_id]);
@@ -44,21 +36,21 @@ exports.handler = async (event) => {
     if (result.affectedRows === 0) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ message: 'Post not found' }),
+        body: JSON.stringify({ message: 'User not found' }),
       };
     }
 
     // Return success response
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Post deleted successfully' }),
+      body: JSON.stringify({ message: 'User deleted successfully' }),
     };
   } catch (error) {
     // Handle errors
-    console.error('Error deleting Post from the database:', error);
+    console.error('Error deleting user from the database:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Failed to delete Post', error: error.message }),
+      body: JSON.stringify({ message: 'Failed to delete user', error: error.message }),
     };
   } finally {
     // Close the database connection

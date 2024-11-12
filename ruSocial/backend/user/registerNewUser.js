@@ -9,14 +9,21 @@ exports.handler = async (event) => {
     database: process.env.DB_NAME,
   };
 
-  // Parse input data from the event
-  const { username, email, password, bio, followers_ids, following_ids, blocked_ids, threads_following_ids } = JSON.parse(event.body);
-
-  // Check if the required data is provided
-  if (!username || !email || !password) {
+  // Validate the 'credentials' header
+  const credentials = event.headers.credentials;
+  if (!credentials) {
     return {
-      statusCode: 400,
-      body: JSON.stringify({ message: 'Missing required fields: username, email, and password' }),
+      statusCode: 403,
+      body: JSON.stringify({ message: 'Missing credentials' }),
+    };
+  }
+
+  // Parse the 'credentials' header into username and password
+  const [newUsername, newPassword] = credentials.split(':');
+  if (!newUsername || !newPassword) {
+    return {
+      statusCode: 403,
+      body: JSON.stringify({ message: 'Invalid credentials format. Expected {username}:{password}' }),
     };
   }
 
@@ -25,21 +32,45 @@ exports.handler = async (event) => {
     // Connect to the database
     connection = await mysql.createConnection(dbConfig);
 
+    // Check if the username already exists in the users table
+    const checkUserQuery = `SELECT * FROM users WHERE username = ?`;
+    const [existingUserRows] = await connection.execute(checkUserQuery, [newUsername]);
+
+    if (existingUserRows.length > 0) {
+      return {
+        statusCode: 409, // Conflict
+        body: JSON.stringify({ message: 'Username already exists' }),
+      };
+    }
+
+    // Parse input data from the event body
+    const { email, bio, followers, following, blocked_ids, threads_following_ids } = JSON.parse(event.body);
+
+    // Check if the required data is provided
+    if (!newUsername || !email || !newPassword) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Missing required fields: username, email, and password' }),
+      };
+    }
+
     // Insert the new user into the users table
-    const query = `
-      INSERT INTO users (username, email, password, bio, followers, followers_ids, following, following_ids, blocked_ids, threads_following_ids)
-      VALUES (?, ?, ?, ?, 0, ?, 0, ?, ?, ?)
-    `;
-    const [result] = await connection.execute(query, [
-      username,
-      email,
-      password,
-      bio || null, // Optional bio field
-      followers_ids || null, // Optional followers_ids field
-      following_ids || null, // Optional following_ids field
-      blocked_ids || null, // Optional blocked_ids field
-      threads_following_ids || null, // Optional threads_following_ids field
-    ]);
+  const insertQuery = `
+    INSERT INTO users (username, email, password, bio, followers, following, blocked_ids, threads_following_ids)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  const [result] = await connection.execute(insertQuery, [
+    newUsername,
+    email,
+    newPassword, // Ideally, hash this password before storing
+    bio || null, // Optional bio field
+    followers !== undefined ? followers : 0, // Set to 0 if undefined, consistent with default
+    following !== undefined ? following : 0, // Set to 0 if undefined, consistent with default
+    blocked_ids ? JSON.stringify(blocked_ids) : null, // Ensure mediumtext field is stringified or null
+    threads_following_ids ? JSON.stringify(threads_following_ids) : null // Ensure mediumtext field is stringified or null
+  ]);
+  
+
 
     // Return success response
     return {
