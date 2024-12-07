@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="marketplace.css">
+  <title>Marketplace - Knight Market</title>
+  <style>
+    .marketplace-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .marketplace-item {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .marketplace-item img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    .marketplace-item h3 {
+      margin: 10px 0 5px;
+      font-size: 1.2em;
+    }
+
+    .marketplace-item p {
+      margin: 0;
+      color: #555;
+    }
+
+    .marketplace-item .price {
+      font-weight: bold;
+      color: #04AA6D;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <h1 class="title">Knight Market</h1>
+      <div class="user-profile">
+        <img src="user-profile.png" alt="User Profile" class="profile-icon">
+        <span class="username">User</span>
+
+        <!-- Dropdown Menu -->
+        <div class="dropdown">
+          <button class="dropbtn">▼</button>
+          <div class="dropdown-content">
+            <a href="profile.html">View Profile</a>
+            <a href="settings.html">Settings</a>
+            <a href="#">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="topnav">
+    <a href="home.html">Home</a>
+    <a class="active" href="marketplace.html">Marketplace</a>
+    <a href="forums.html">Forums</a>
+    <a href="messages.html">Messages</a>
+  </div>
+
+  <div class="content">
+    <h2>Marketplace</h2>
+    <p>Browse items for sale below:</p>
+    <div class="marketplace-container">
+      <!-- Example Items -->
+      <div class="marketplace-item">
+        <img src="mybaby\rusocial\src\html\bike.jpg" alt="Item 1">
+        <h3>bike</h3>
+        <p>barely used older bike being sold</p>
+        <p class="price">$50</p>
+      </div>
+      <div class="marketplace-item">
+        <img src="item2.jpg" alt="Item 2">
+        <h3>Item 2</h3>
+        <p>Description of item 2</p>
+        <p class="price">$25</p>
+      </div>
+      <div class="marketplace-item">
+        <img src="item3.jpg" alt="Item 3">
+        <h3>Item 3</h3>
+        <p>Description of item 3</p>
+        <p class="price">$15</p>
+      </div>
+      <!-- Add more items as needed -->
+    </div>
+  </div>
+</body>
+</html>
