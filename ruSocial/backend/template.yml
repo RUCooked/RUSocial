@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Globals:
   Function:
     Runtime: nodejs20.x
-    Timeout: 3
+    Timeout: 5
     Handler: main.handler
     Environment:
       Variables:
@@ -19,9 +19,40 @@ Globals:
         - subnet-040296c7a5480bab1
         - subnet-04c8960b424ac23bb
 
+Parameters:
+  ApiGatewayId:
+    Type: String
+    Default: r0s9cmfju1
+
 Resources:
   knightAPI_forum:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./forum
+      FunctionName: knightAPI_forum
+      CodeUri: ./functions/forum
+      Events:
+        ForumGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayId
+            Path: /forum
+            Method: GET
+        ForumPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayId
+            Path: /forum
+            Method: POST
+        ForumPut:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayId
+            Path: /forum
+            Method: PUT
+        ForumDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayId
+            Path: /forum
+            Method: DELETE
 
