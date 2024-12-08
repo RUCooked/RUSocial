@@ -19,40 +19,53 @@ Globals:
         - subnet-040296c7a5480bab1
         - subnet-04c8960b424ac23bb
 
-Parameters:
-  ApiGatewayId:
-    Type: String
-    Default: r0s9cmfju1
+# Parameters:
+#   ApiGatewayId:
+#     Type: String
+#     Default: r0s9cmfju1
+
 
 Resources:
-  knightAPI_forum:
+
+  # knightAPI:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     RestApiId: !Ref ApiGatewayId
+  #     StageName: dev
+
+  knightAPIforum:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: knightAPI_forum
       CodeUri: ./functions/forum
+      Role: arn:aws:iam::147997151910:role/service-role/knightAPI_forum-role-jmtrdpyb
+      Layers: 
+        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+      LoggingConfig:
+        LogFormat: Text
+        LogGroup: /aws/lambda/knightAPI_forum
+      MemorySize: 128
+      Architectures: 
+        - x86_64
       Events:
         ForumGet:
           Type: Api
           Properties:
-            RestApiId: !Ref ApiGatewayId
             Path: /forum
             Method: GET
         ForumPost:
           Type: Api
           Properties:
-            RestApiId: !Ref ApiGatewayId
             Path: /forum
             Method: POST
         ForumPut:
           Type: Api
           Properties:
-            RestApiId: !Ref ApiGatewayId
             Path: /forum
             Method: PUT
         ForumDelete:
           Type: Api
           Properties:
-            RestApiId: !Ref ApiGatewayId
             Path: /forum
             Method: DELETE
 

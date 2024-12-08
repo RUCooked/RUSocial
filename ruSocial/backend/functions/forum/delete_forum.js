@@ -1,4 +1,3 @@
-const mysql = require('mysql2/promise')
 
 exports.handler = async (data, pool) => {
     console.log('DELETE handler started');
