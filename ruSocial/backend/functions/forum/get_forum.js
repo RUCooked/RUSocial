@@ -1,7 +1,7 @@
 
 exports.handler = async (queryParams, pool) => {
     console.log('GET handler started');
-    console.log('Received data:', JSON.stringify(data));
+    console.log('Received data:', JSON.stringify(queryParams));
     try {
         let baseQuery = 'SELECT * FROM forum_posts';
         const conditions = [];

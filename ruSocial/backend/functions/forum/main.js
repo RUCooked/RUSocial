@@ -23,7 +23,6 @@ exports.handler = async (event) => {
         const pathParameters = event.pathParameters || {};
         const queryStringParameters = event.queryStringParameters || {};
 
-
         let body
         try {
             if (typeof(event.body) === 'string') {
@@ -39,7 +38,7 @@ exports.handler = async (event) => {
         // The following is a super basic way of handling credentials. 
         // we're going to replace this with handling JWT tokens
         // for now this is fine
-        const credentials = headers.credentials;
+        const credentials = headers.credentials || headers.Credentials;
         if (!credentials) {
             return generateResponse(401, { message: 'Missing credentials' });
         }
