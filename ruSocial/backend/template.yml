@@ -1,0 +1,27 @@
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 3
+    Handler: main.handler
+    Environment:
+      Variables:
+        DB_HOST: db-ecefall452.chkeokiu8zrk.us-east-2.rds.amazonaws.com
+        DB_NAME: knight_db
+        DB_PASSWORD: chickenNugget452!
+        DB_USER: masterknight
+    VpcConfig:
+      SecurityGroupIds:
+        - sg-0964fb63a9b5bc0e9
+      SubnetIds:
+        - subnet-042c1e86932d10a39
+        - subnet-040296c7a5480bab1
+        - subnet-04c8960b424ac23bb
+
+Resources:
+  knightAPI_forum:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./forum
+
