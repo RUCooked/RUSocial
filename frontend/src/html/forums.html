@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="home.css">
+  <title>Forums - Knight Market</title>
+  <style>
+    .forums-container {
+      width: 80%;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .forum-post {
+      display: flex;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .vote-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 10px;
+    }
+
+    .vote-buttons button {
+      background-color: #04AA6D;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      margin: 5px 0;
+      cursor: pointer;
+    }
+
+    .vote-buttons button:hover {
+      background-color: #028a5c;
+    }
+
+    .post-details {
+      flex-grow: 1;
+    }
+
+    .post-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .post-description {
+      margin: 5px 0;
+      color: #555;
+    }
+
+    .post-meta {
+      font-size: 0.9em;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <h1 class="title">Knight Market</h1>
+      <div class="user-profile">
+        <img src="user-profile.png" alt="User Profile" class="profile-icon">
+        <span class="username">User</span>
+
+        <!-- Dropdown Menu -->
+        <div class="dropdown">
+          <button class="dropbtn">▼</button>
+          <div class="dropdown-content">
+            <a href="profile.html">View Profile</a>
+            <a href="settings.html">Settings</a>
+            <a href="#">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="topnav">
+    <a href="home.html">Home</a>
+    <a href="marketplace.html">Marketplace</a>
+    <a class="active" href="forums.html">Forums</a>
+    <a href="messages.html">Messages</a>
+  </div>
+
+  <div class="content forums-container">
+    <h2>Forums</h2>
+    <p>Join the discussion below:</p>
+    <div class="forum-post">
+      <div class="vote-buttons">
+        <button>▲</button>
+        <span>10</span>
+        <button>▼</button>
+      </div>
+      <div class="post-details">
+        <p class="post-title">Slenderman if he was Jason Merchan</p>
+        <p class="post-description">Collect my merchandise.</p>
+        <p class="post-meta">Posted by Jason Merchan - 1 minute ago ago</p>
+      </div>
+    </div>
+    <div class="forum-post">
+      <div class="vote-buttons">
+        <button>▲</button>
+        <span>5</span>
+        <button>▼</button>
+      </div>
+      <div class="post-details">
+        <p class="post-title">I need my A's</p>
+        <p class="post-description">I am failing my classes.</p>
+        <p class="post-meta">Posted by Haider A - 2 months ago</p>
+      </div>
+    </div>
+    <!-- Add more posts as needed -->
+  </div>
+</body>
+</html>
