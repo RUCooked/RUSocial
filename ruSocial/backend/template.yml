@@ -19,20 +19,7 @@ Globals:
         - subnet-040296c7a5480bab1
         - subnet-04c8960b424ac23bb
 
-# Parameters:
-#   ApiGatewayId:
-#     Type: String
-#     Default: r0s9cmfju1
-
-
 Resources:
-
-  # knightAPI:
-  #   Type: AWS::Serverless::Api
-  #   Properties:
-  #     RestApiId: !Ref ApiGatewayId
-  #     StageName: dev
-
   knightAPIforum:
     Type: AWS::Serverless::Function
     Properties:
@@ -104,5 +91,3 @@ Resources:
           Properties:
             Path: /marketplace
             Method: DELETE
-
-
