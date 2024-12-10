@@ -91,3 +91,39 @@ Resources:
           Properties:
             Path: /marketplace
             Method: DELETE
+
+  knightAPIusers:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: knightAPI_users
+      CodeUri: ./functions/users
+      Role: arn:aws:iam::147997151910:role/service-role/registerNewUser-role-c037yq0i
+      Layers: 
+        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+      LoggingConfig:
+        LogFormat: Text
+        LogGroup: /aws/lambda/knightAPI_users
+      MemorySize: 128
+      Architectures: 
+        - x86_64
+      Events:
+        UsersGet:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: GET
+        UsersPost:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: POST
+        UsersPut:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: PUT
+        UsersDelete:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: DELETE
