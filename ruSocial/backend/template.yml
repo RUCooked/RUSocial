@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Globals:
   Function:
     Runtime: nodejs20.x
-    Timeout: 5
+    Timeout: 8
     Handler: main.handler
     Environment:
       Variables:
@@ -68,4 +68,41 @@ Resources:
           Properties:
             Path: /forum
             Method: DELETE
+  
+  knightAPImarketplace:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: knightAPI_marketplace
+      CodeUri: ./functions/marketplace
+      Role: arn:aws:iam::147997151910:role/service-role/knightAPI_marketplace-role-xuhmupfg
+      Layers: 
+        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+      LoggingConfig:
+        LogFormat: Text
+        LogGroup: /aws/lambda/knightAPI_marketplace
+      MemorySize: 128
+      Architectures: 
+        - x86_64
+      Events:
+        MarketplaceGet:
+          Type: Api
+          Properties:
+            Path: /marketplace
+            Method: GET
+        MarketplacePost:
+          Type: Api
+          Properties:
+            Path: /marketplace
+            Method: POST
+        MarketplacePut:
+          Type: Api
+          Properties:
+            Path: /marketplace
+            Method: PUT
+        MarketplaceDelete:
+          Type: Api
+          Properties:
+            Path: /marketplace
+            Method: DELETE
+
 
