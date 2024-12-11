@@ -127,3 +127,77 @@ Resources:
           Properties:
             Path: /users
             Method: DELETE
+  
+  knightAPIthread:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: knightAPI_thread
+      CodeUri: ./functions/thread
+      Role: arn:aws:iam::147997151910:role/service-role/knightAPI_thread-role-hldorr29
+      Layers: 
+        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+      LoggingConfig:
+        LogFormat: Text
+        LogGroup: /aws/lambda/knightAPI_thread
+      MemorySize: 128
+      Architectures: 
+        - x86_64
+      Events:
+        ThreadGet:
+          Type: Api
+          Properties:
+            Path: /thread
+            Method: GET
+        ThreadPost:
+          Type: Api
+          Properties:
+            Path: /thread
+            Method: POST
+        ThreadPut:
+          Type: Api
+          Properties:
+            Path: /thread
+            Method: PUT
+        ThreadDelete:
+          Type: Api
+          Properties:
+            Path: /thread
+            Method: DELETE
+
+  knightAPIimages:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: knightAPI_images
+      CodeUri: ./functions/images
+      Role: arn:aws:iam::147997151910:role/LambdaS3AccessRole
+      Layers: 
+        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+      LoggingConfig:
+        LogFormat: Text
+        LogGroup: /aws/lambda/knightAPI_users
+      MemorySize: 128
+      Architectures: 
+        - x86_64
+      Events:
+        ImagesGet:
+          Type: Api
+          Properties:
+            Path: /images
+            Method: GET
+        ImagesPost:
+          Type: Api
+          Properties:
+            Path: /images
+            Method: POST
+        ImagesPut:
+          Type: Api
+          Properties:
+            Path: /images
+            Method: PUT
+        ImagesDelete:
+          Type: Api
+          Properties:
+            Path: /images
+            Method: DELETE
+
+  
