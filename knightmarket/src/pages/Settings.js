@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
+import { FaUser, FaLock, FaEnvelope, FaCamera, FaTrash, FaShieldAlt, FaUserSlash, FaArrowLeft } from 'react-icons/fa'; // Import icons
 
 function Settings() {
+  const navigate = useNavigate(); // Initialize useNavigate hook
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
@@ -27,30 +30,40 @@ function Settings() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.mainHeading}>Settings</h1>
+      <button onClick={() => navigate(-1)} style={styles.backButton}>
+        <FaArrowLeft style={styles.backButtonIcon} /> Back
+      </button>
+
+      <h1 style={styles.mainHeading}>
+        <FaShieldAlt style={styles.icon} /> Settings
+      </h1>
 
       <div style={styles.card}>
-        <h2 style={styles.sectionHeading}>Profile Basics</h2>
+        <h2 style={styles.sectionHeading}>
+          <FaUser style={styles.icon} /> Profile Basics
+        </h2>
         <label style={styles.label}>
-          Username:
+          <FaUser style={styles.labelIcon} /> Username:
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             style={styles.input}
+            placeholder="Enter your username"
           />
         </label>
         <label style={styles.label}>
-          Display Name:
+          <FaUser style={styles.labelIcon} /> Display Name:
           <input
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             style={styles.input}
+            placeholder="Enter your display name"
           />
         </label>
         <label style={styles.label}>
-          Profile Picture:
+          <FaCamera style={styles.labelIcon} /> Profile Picture:
           <input type="file" onChange={handleFileUpload} style={styles.input} />
         </label>
         {profilePicture && (
@@ -61,25 +74,29 @@ function Settings() {
           />
         )}
         <label style={styles.label}>
-          Primary Contact Email:
+          <FaEnvelope style={styles.labelIcon} /> Primary Contact Email:
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={styles.input}
+            placeholder="Enter your email"
           />
         </label>
       </div>
 
       <div style={styles.card}>
-        <h2 style={styles.sectionHeading}>Security & Access</h2>
+        <h2 style={styles.sectionHeading}>
+          <FaLock style={styles.icon} /> Security & Access
+        </h2>
         <label style={styles.label}>
-          Change Password:
+          <FaLock style={styles.labelIcon} /> Change Password:
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={styles.input}
+            placeholder="Enter new password"
           />
         </label>
         <label style={styles.checkboxLabel}>
@@ -94,9 +111,11 @@ function Settings() {
       </div>
 
       <div style={styles.card}>
-        <h2 style={styles.sectionHeading}>Privacy Controls</h2>
+        <h2 style={styles.sectionHeading}>
+          <FaUserSlash style={styles.icon} /> Privacy Controls
+        </h2>
         <button onClick={handleBlockUser} style={styles.button}>
-          Block User By Username
+          <FaTrash style={styles.buttonIcon} /> Block User By Username
         </button>
         <ul style={styles.blockedList}>
           {blockedUsers.map((user, index) => (
@@ -106,7 +125,7 @@ function Settings() {
                 onClick={() => handleUnblockUser(user)}
                 style={styles.unblockButton}
               >
-                Unblock
+                <FaTrash style={styles.buttonIcon} /> Unblock
               </button>
             </li>
           ))}
@@ -115,80 +134,114 @@ function Settings() {
     </div>
   );
 }
- 
+
 const styles = {
   container: {
-    margin: '50px',
+    margin: '20px auto',
     padding: '20px',
+    maxWidth: '1000px',
     fontFamily: "'Roboto', sans-serif",
-    backgroundColor: '#f9f9f9',
-    minHeight: '100vh',
+    backgroundColor: '#f4f4f4',
+    borderRadius: '10px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    textAlign: 'left',
   },
-  mainHeading: {
-    textAlign: 'center',
-    fontSize: '2.5em',
-    marginBottom: '20px',
-    color: '#333',
-  },
-  card: {
-    marginLeft: '10em',
-    marginRight: '10em',
-    backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    marginBottom: '20px',
-  },
-  sectionHeading: {
-    fontSize: '1.5em',
-    color: '#b22222',
-    marginBottom: '15px',
-    borderBottom: '2px solid #f0f0f0',
-    paddingBottom: '10px',
-  },
-  label: {
-    marginRight: '16em',
-    marginLeft: '16em',
-    display: 'block',
-    marginBottom: '10px',
-    fontSize: '1em',
-    fontWeight: 'bold',
-  },
-  input: {
-    display: 'block',
-    width: '100%',
-    padding: '10px',
-    marginTop: '5px',
-    marginBottom: '15px',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
-    fontSize: '1em',
-  },
-  checkboxLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '15px',
-    fontSize: '1em',
-  },
-  checkbox: {
-    
-    marginLeft: '15em',
-  },
-  profilePic: {
-    display: 'block',
-    width: '100px',
-    height: '100px',
-    borderRadius: '50%',
-    margin: '10px 0',
-  },
-  button: {
+  backButton: {
     padding: '10px 15px',
     backgroundColor: '#b22222',
     color: 'white',
     border: 'none',
     borderRadius: '5px',
     cursor: 'pointer',
-    fontSize: '1em',
+    fontSize: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '20px',
+  },
+  backButtonIcon: {
+    marginRight: '8px',
+  },
+  mainHeading: {
+    fontSize: '2.5rem',
+    marginBottom: '20px',
+    color: '#333',
+    textAlign: 'left',
+    display: 'flex',
+    alignItems: 'center',
+    borderBottom: '2px solid #ddd',
+    paddingBottom: '10px',
+  },
+  card: {
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    marginBottom: '20px',
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  sectionHeading: {
+    fontSize: '1.5rem',
+    color: '#b22222',
+    marginBottom: '10px',
+    borderBottom: '2px solid #ddd',
+    paddingBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  label: {
+    display: 'block',
+    marginBottom: '15px',
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    color: '#555',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  labelIcon: {
+    marginRight: '8px',
+    color: '#b22222',
+  },
+  input: {
+    display: 'block',
+    width: '100%',
+    padding: '10px',
+    marginTop: '5px',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+    fontSize: '1rem',
+  },
+  checkboxLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '15px',
+    fontSize: '1rem',
+    color: '#555',
+  },
+  checkbox: {
+    marginRight: '10px',
+  },
+  profilePic: {
+    display: 'block',
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    margin: '10px 0',
+  },
+  button: {
+    padding: '10px 20px',
+    backgroundColor: '#b22222',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    width: 'fit-content',
+  },
+  buttonIcon: {
+    marginRight: '8px',
   },
   unblockButton: {
     padding: '5px 10px',
@@ -198,6 +251,8 @@ const styles = {
     borderRadius: '3px',
     cursor: 'pointer',
     marginLeft: '10px',
+    display: 'flex',
+    alignItems: 'center',
   },
   blockedList: {
     listStyleType: 'none',
@@ -208,9 +263,12 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: '10px',
-    fontSize: '1em',
-    borderBottom: '1px solid #f0f0f0',
+    fontSize: '1rem',
+    borderBottom: '1px solid #ddd',
     paddingBottom: '5px',
+  },
+  icon: {
+    marginRight: '10px',
   },
 };
 
