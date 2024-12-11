@@ -38,7 +38,7 @@ exports.handler = async (event) => {
             return generateResponse(400, { message: 'Invalid JSON in request body' });
         }
 
-        const credentials = headers.credentials;
+        const credentials = headers.credentials || headers.Credentials;
         if (!credentials) {
             return generateResponse(401, { message: 'Missing credentials' });
         }

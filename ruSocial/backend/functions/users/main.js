@@ -31,7 +31,7 @@ exports.handler = async (event) => {
         const body = event.body || {};
 
         // Authenticate the request
-        const credentials = headers.credentials;
+        const credentials = headers.credentials || headers.Credentials;
         if (!credentials) {
             return generateResponse(401, { message: 'Missing credentials' });
         }
