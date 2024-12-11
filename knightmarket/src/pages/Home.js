@@ -24,7 +24,7 @@ function Home() {
         </div>
         <nav style={styles.nav}>
           <Link to="/" style={styles.navLink}>
-            <img src="https://via.placeholder.com/20" alt="Home Icon" style={styles.icon} /> Home
+            <img src="knightmarket/src/assets/home_filled.png" alt="Home Icon" style={styles.icon} /> Home
           </Link>
           <Link to="/marketplace" style={styles.navLink}>
             <img src="https://via.placeholder.com/20" alt="Marketplace Icon" style={styles.icon} /> Marketplace
