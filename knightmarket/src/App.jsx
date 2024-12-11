@@ -12,6 +12,8 @@ import Forum from './pages/Forum';
 import CreatePost from './pages/createPost';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
+import Userprofile from "./pages/Userprofile";
+import './App.css';
 
 Amplify.configure(awsExports);
 
