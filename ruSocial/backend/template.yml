@@ -56,226 +56,227 @@ Resources:
             Path: /forum
             Method: DELETE
   
-  knightAPImarketplace:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: knightAPI_marketplace
-      CodeUri: ./functions/marketplace
-      Role: arn:aws:iam::147997151910:role/service-role/knightAPI_marketplace-role-xuhmupfg
-      Layers: 
-        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
-      LoggingConfig:
-        LogFormat: Text
-        LogGroup: /aws/lambda/knightAPI_marketplace
-      MemorySize: 128
-      Architectures: 
-        - x86_64
-      Events:
-        MarketplaceGet:
-          Type: Api
-          Properties:
-            Path: /marketplace
-            Method: GET
-        MarketplacePost:
-          Type: Api
-          Properties:
-            Path: /marketplace
-            Method: POST
-        MarketplacePut:
-          Type: Api
-          Properties:
-            Path: /marketplace
-            Method: PUT
-        MarketplaceDelete:
-          Type: Api
-          Properties:
-            Path: /marketplace
-            Method: DELETE
-
-  knightAPIusers:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: knightAPI_users
-      CodeUri: ./functions/users
-      Role: arn:aws:iam::147997151910:role/service-role/registerNewUser-role-c037yq0i
-      Layers: 
-        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
-      LoggingConfig:
-        LogFormat: Text
-        LogGroup: /aws/lambda/knightAPI_users
-      MemorySize: 128
-      Architectures: 
-        - x86_64
-      Events:
-        UsersGet:
-          Type: Api
-          Properties:
-            Path: /users
-            Method: GET
-        UsersPost:
-          Type: Api
-          Properties:
-            Path: /users
-            Method: POST
-        UsersPut:
-          Type: Api
-          Properties:
-            Path: /users
-            Method: PUT
-        UsersDelete:
-          Type: Api
-          Properties:
-            Path: /users
-            Method: DELETE
-  
-  knightAPIthread:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: knightAPI_thread
-      CodeUri: ./functions/thread
-      Role: arn:aws:iam::147997151910:role/service-role/knightAPI_thread-role-hldorr29
-      Layers: 
-        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
-      LoggingConfig:
-        LogFormat: Text
-        LogGroup: /aws/lambda/knightAPI_thread
-      MemorySize: 128
-      Architectures: 
-        - x86_64
-      Events:
-        ThreadGet:
-          Type: Api
-          Properties:
-            Path: /thread
-            Method: GET
-        ThreadPost:
-          Type: Api
-          Properties:
-            Path: /thread
-            Method: POST
-        ThreadPut:
-          Type: Api
-          Properties:
-            Path: /thread
-            Method: PUT
-        ThreadDelete:
-          Type: Api
-          Properties:
-            Path: /thread
-            Method: DELETE
-
-  knightAPIimages:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: knightAPI_images
-      CodeUri: ./functions/images
-      Role: arn:aws:iam::147997151910:role/LambdaS3AccessRole
-      Layers: 
-        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
-      LoggingConfig:
-        LogFormat: Text
-        LogGroup: /aws/lambda/knightAPI_users
-      MemorySize: 128
-      Architectures: 
-        - x86_64
-      Events:
-        ImagesGet:
-          Type: Api
-          Properties:
-            Path: /images
-            Method: GET
-        ImagesPost:
-          Type: Api
-          Properties:
-            Path: /images
-            Method: POST
-        ImagesPut:
-          Type: Api
-          Properties:
-            Path: /images
-            Method: PUT
-        ImagesDelete:
-          Type: Api
-          Properties:
-            Path: /images
-            Method: DELETE
-
-  # knightAPIconversation:
+  # knightAPImarketplace:
   #   Type: AWS::Serverless::Function
   #   Properties:
-  #     FunctionName: knightAPI_conversation
-  #     CodeUri: ./functions/conversation
+  #     FunctionName: knightAPI_marketplace
+  #     CodeUri: ./functions/marketplace
+  #     Role: arn:aws:iam::147997151910:role/service-role/knightAPI_marketplace-role-xuhmupfg
+  #     Layers: 
+  #       - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+  #     LoggingConfig:
+  #       LogFormat: Text
+  #       LogGroup: /aws/lambda/knightAPI_marketplace
+  #     MemorySize: 128
+  #     Architectures: 
+  #       - x86_64
+  #     Events:
+  #       MarketplaceGet:
+  #         Type: Api
+  #         Properties:
+  #           Path: /marketplace
+  #           Method: GET
+  #       MarketplacePost:
+  #         Type: Api
+  #         Properties:
+  #           Path: /marketplace
+  #           Method: POST
+  #       MarketplacePut:
+  #         Type: Api
+  #         Properties:
+  #           Path: /marketplace
+  #           Method: PUT
+  #       MarketplaceDelete:
+  #         Type: Api
+  #         Properties:
+  #           Path: /marketplace
+  #           Method: DELETE
+
+  # knightAPIusers:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     FunctionName: knightAPI_users
+  #     CodeUri: ./functions/users
+  #     Role: arn:aws:iam::147997151910:role/service-role/registerNewUser-role-c037yq0i
+  #     Layers: 
+  #       - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+  #     LoggingConfig:
+  #       LogFormat: Text
+  #       LogGroup: /aws/lambda/knightAPI_users
+  #     MemorySize: 128
+  #     Architectures: 
+  #       - x86_64
+  #     Events:
+  #       UsersGet:
+  #         Type: Api
+  #         Properties:
+  #           Path: /users
+  #           Method: GET
+  #       UsersPost:
+  #         Type: Api
+  #         Properties:
+  #           Path: /users
+  #           Method: POST
+  #       UsersPut:
+  #         Type: Api
+  #         Properties:
+  #           Path: /users
+  #           Method: PUT
+  #       UsersDelete:
+  #         Type: Api
+  #         Properties:
+  #           Path: /users
+  #           Method: DELETE
+  
+  # knightAPIthread:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     FunctionName: knightAPI_thread
+  #     CodeUri: ./functions/thread
+  #     Role: arn:aws:iam::147997151910:role/service-role/knightAPI_thread-role-hldorr29
+  #     Layers: 
+  #       - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+  #     LoggingConfig:
+  #       LogFormat: Text
+  #       LogGroup: /aws/lambda/knightAPI_thread
+  #     MemorySize: 128
+  #     Architectures: 
+  #       - x86_64
+  #     Events:
+  #       ThreadGet:
+  #         Type: Api
+  #         Properties:
+  #           Path: /thread
+  #           Method: GET
+  #       ThreadPost:
+  #         Type: Api
+  #         Properties:
+  #           Path: /thread
+  #           Method: POST
+  #       ThreadPut:
+  #         Type: Api
+  #         Properties:
+  #           Path: /thread
+  #           Method: PUT
+  #       ThreadDelete:
+  #         Type: Api
+  #         Properties:
+  #           Path: /thread
+  #           Method: DELETE
+
+  # knightAPIimages:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     FunctionName: knightAPI_images
+  #     CodeUri: ./functions/images
   #     Role: arn:aws:iam::147997151910:role/LambdaS3AccessRole
-  #     Environment:
-  #       Variables:
-  #         BUCKET_NAME: swefall452
   #     Layers: 
   #       - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
   #       - arn:aws:lambda:us-east-2:147997151910:layer:aws_sdk2:1
   #     LoggingConfig:
   #       LogFormat: Text
-  #       LogGroup: /aws/lambda/knightAPI_conversation
+  #       LogGroup: /aws/lambda/knightAPI_users
   #     MemorySize: 128
   #     Architectures: 
   #       - x86_64
   #     Events:
-  #       ConversationGet:
+  #       ImagesGet:
   #         Type: Api
   #         Properties:
-  #           Path: /conversation
+  #           Path: /images
   #           Method: GET
-  #       ConversationPost:
+  #       ImagesPost:
   #         Type: Api
   #         Properties:
-  #           Path: /conversation
+  #           Path: /images
   #           Method: POST
-  #       ConversationPut:
+  #       ImagesPut:
   #         Type: Api
   #         Properties:
-  #           Path: /conversation
+  #           Path: /images
   #           Method: PUT
-  #       ConversationDelete:
+  #       ImagesDelete:
   #         Type: Api
   #         Properties:
-  #           Path: /conversation
+  #           Path: /images
   #           Method: DELETE
 
-  knightAPImessages:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: knightAPI_messages
-      CodeUri: ./functions/messages
-      Environment:
-        Variables:
-          BUCKET_NAME: swefall452
-      Role: arn:aws:iam::147997151910:role/service-role/registerNewUser-role-c037yq0i
-      Layers: 
-        - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
-        - arn:aws:lambda:us-east-2:147997151910:layer:aws_sdk2:1
-      LoggingConfig:
-        LogFormat: Text
-        LogGroup: /aws/lambda/knightAPI_messages
-      MemorySize: 128
-      Architectures: 
-        - x86_64
-      Events:
-        MessagesGet:
-          Type: Api
-          Properties:
-            Path: /messages
-            Method: GET
-        MessagesPost:
-          Type: Api
-          Properties:
-            Path: /messages
-            Method: POST
-        # MessagesPut:
-        #   Type: Api
-        #   Properties:
-        #     Path: /messages
-        #     Method: PUT
-        MessagesDelete:
-          Type: Api
-          Properties:
-            Path: /messages
-            Method: DELETE
+  # # knightAPIconversation:
+  # #   Type: AWS::Serverless::Function
+  # #   Properties:
+  # #     FunctionName: knightAPI_conversation
+  # #     CodeUri: ./functions/conversation
+  # #     Role: arn:aws:iam::147997151910:role/LambdaS3AccessRole
+  # #     Environment:
+  # #       Variables:
+  # #         BUCKET_NAME: swefall452
+  # #     Layers: 
+  # #       - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+  # #       - arn:aws:lambda:us-east-2:147997151910:layer:aws_sdk2:1
+  # #     LoggingConfig:
+  # #       LogFormat: Text
+  # #       LogGroup: /aws/lambda/knightAPI_conversation
+  # #     MemorySize: 128
+  # #     Architectures: 
+  # #       - x86_64
+  # #     Events:
+  # #       ConversationGet:
+  # #         Type: Api
+  # #         Properties:
+  # #           Path: /conversation
+  # #           Method: GET
+  # #       ConversationPost:
+  # #         Type: Api
+  # #         Properties:
+  # #           Path: /conversation
+  # #           Method: POST
+  # #       ConversationPut:
+  # #         Type: Api
+  # #         Properties:
+  # #           Path: /conversation
+  # #           Method: PUT
+  # #       ConversationDelete:
+  # #         Type: Api
+  # #         Properties:
+  # #           Path: /conversation
+  # #           Method: DELETE
+
+  # knightAPImessages:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     FunctionName: knightAPI_messages
+  #     CodeUri: ./functions/messages
+  #     Environment:
+  #       Variables:
+  #         BUCKET_NAME: swefall452
+  #     Role: arn:aws:iam::147997151910:role/service-role/registerNewUser-role-c037yq0i
+  #     Layers: 
+  #       - arn:aws:lambda:us-east-2:147997151910:layer:mysql2-layer:1
+  #       - arn:aws:lambda:us-east-2:147997151910:layer:aws_sdk2:1
+  #     LoggingConfig:
+  #       LogFormat: Text
+  #       LogGroup: /aws/lambda/knightAPI_messages
+  #     MemorySize: 128
+  #     Architectures: 
+  #       - x86_64
+  #     Events:
+  #       MessagesGet:
+  #         Type: Api
+  #         Properties:
+  #           Path: /messages
+  #           Method: GET
+  #       MessagesPost:
+  #         Type: Api
+  #         Properties:
+  #           Path: /messages
+  #           Method: POST
+  #       # MessagesPut:
+  #       #   Type: Api
+  #       #   Properties:
+  #       #     Path: /messages
+  #       #     Method: PUT
+  #       MessagesDelete:
+  #         Type: Api
+  #         Properties:
+  #           Path: /messages
+  #           Method: DELETE

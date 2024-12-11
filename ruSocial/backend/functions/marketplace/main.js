@@ -10,6 +10,10 @@ const db_password = process.env.DB_PASSWORD;
 
 exports.handler = async (event) => {
     try {
+
+        const headers = event.headers || {};
+        const httpMethod = event.httpMethod;
+
         // Extract credentials from headers
         const credentials = headers.credentials || headers.Credentials;
         if (!credentials) {
@@ -28,8 +32,7 @@ exports.handler = async (event) => {
             };
         }
 
-        const method = event.httpMethod;
-        switch (method) {
+        switch (httpMethod) {
             case 'POST':
                 return await postMarketplace.handler(event);
             case 'DELETE':
