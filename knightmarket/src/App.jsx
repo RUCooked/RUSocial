@@ -1,6 +1,7 @@
 import React from 'react'; 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'; 
 import Home from './pages/Home'; 
+import { NavigationBar } from './components';
 import Marketplace from './pages/Marketplace'; 
 import MakeListing from './pages/makeListing'; 
 import Forum from './pages/Forum'; // Import Forum component
@@ -12,13 +13,14 @@ function App() {
   return (
     <Router>
       <div className="App">
+        <NavigationBar />
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/make-listing" element={<MakeListing />} />
-            <Route path="/forum" element={<Forum />} /> {/* Add Forum route */}
-            <Route path="/create-post" element={<CreatePost />} /> {/* Add CreatePost route */}
+            <Route path="/forum" element={<Forum />} />
+            <Route path="/create-post" element={<CreatePost />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </main>
