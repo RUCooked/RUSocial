@@ -14,49 +14,35 @@ function MakeListing({ addListing, userId }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // const uploadImage = async (base64Image, fileName) => {
-  //   try {
-  //     const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/images', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         base64Image,
-  //         fileName,
-  //       }),
-  //     });
-  
-  //     if (!response.ok) {
-  //       throw new Error('Failed to upload image.');
-  //     }
-  
-  //     const result = await response.json();
-  //     console.log('Raw API Response:', result);
-
-  //     const imageUrls = JSON.parse(result.body).imageUrls;
-  //     return imageUrls[0]; // Assuming single image upload
-  //   } catch (err) {
-  //     console.error(err);
-  //     throw new Error('Image upload failed.');
-  //   }
-  // };
-
   const postListing = async (listingData) => {
     try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/dev/marketplace', {
+      // console.log('Credentials:', 'masterknight:chickenNugget452');
+      // console.log('user_id:', 3);
+      // console.log('title:', listingData.title);
+      // console.log('product_description:', listingData.product_description);
+      // console.log('product_price:', listingData.product_price);
+      // console.log('images_url:', listingData.images_url || '');
+      
+      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          credentials: 'username:password' // Replace with real credentials
+          'credentials': 'masterknight:chickenNugget452!' // Need to make this more secure later
         },
-        body: JSON.stringify(listingData)
+        body: JSON.stringify({
+          user_id: 3, // Place holder, need to implement get user_id
+          title: listingData.title,
+          product_description: listingData.product_description,
+          product_price: listingData.product_price,
+          images_url: listingData.images_url || '' 
+        })
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to post listing.');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to post listing.');
       }
-
+  
       return await response.json();
     } catch (err) {
       console.error(err);
@@ -78,33 +64,31 @@ function MakeListing({ addListing, userId }) {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64Image = reader.result.split(',')[1]; // Strip off the prefix
-        console.log('Base64 Image:', base64Image);
 
         try {
           // Upload image and get URL
           const imageUrl = await uploadImage(base64Image, `listing_${Date.now()}`);
           console.log('Image uploaded successfully:', imageUrl);
-          alert(`Image URL: ${imageUrl}`);
 
-          // // Prepare data for the listing
-          // const listingData = {
-          //   user_id: userId,
-          //   title: formData.title,
-          //   product_description: formData.description,
-          //   product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
-          //   images_url: imageUrl
-          // };
+          // Prepare data for the listing
+          const listingData = {
+            user_id: userId,
+            title: formData.title,
+            product_description: formData.description,
+            product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
+            images_url: imageUrl
+          };
 
-          // // Post the listing
-          // const newListing = await postListing(listingData);
-          // console.log('Listing created successfully:', newListing);
+          // Post the listing
+          const newListing = await postListing(listingData);
+          console.log('Listing created successfully:', newListing);
 
-          // if (addListing) {
-          //   addListing(newListing);
-          // }
+          if (addListing) {
+            addListing(newListing);
+          }
 
-          // // Navigate back to the marketplace
-          // navigate('/marketplace');
+          // Navigate back to the marketplace
+          navigate('/marketplace');
         } catch (err) {
           setError(err.message);
         } finally {
