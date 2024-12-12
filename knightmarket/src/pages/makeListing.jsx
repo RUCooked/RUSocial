@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { uploadImage } from '../utils/imageUpload';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 
@@ -13,33 +14,33 @@ function MakeListing({ addListing, userId }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const uploadImage = async (base64Image, fileName) => {
-    try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/images', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          base64Image,
-          fileName,
-        }),
-      });
+  // const uploadImage = async (base64Image, fileName) => {
+  //   try {
+  //     const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/images', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         base64Image,
+  //         fileName,
+  //       }),
+  //     });
   
-      if (!response.ok) {
-        throw new Error('Failed to upload image.');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to upload image.');
+  //     }
   
-      const result = await response.json();
-      console.log('Raw API Response:', result);
+  //     const result = await response.json();
+  //     console.log('Raw API Response:', result);
 
-      const imageUrls = JSON.parse(result.body).imageUrls;
-      return imageUrls[0]; // Assuming single image upload
-    } catch (err) {
-      console.error(err);
-      throw new Error('Image upload failed.');
-    }
-  };
+  //     const imageUrls = JSON.parse(result.body).imageUrls;
+  //     return imageUrls[0]; // Assuming single image upload
+  //   } catch (err) {
+  //     console.error(err);
+  //     throw new Error('Image upload failed.');
+  //   }
+  // };
 
   const postListing = async (listingData) => {
     try {
