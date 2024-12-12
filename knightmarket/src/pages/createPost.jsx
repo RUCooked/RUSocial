@@ -46,11 +46,9 @@ function CreatePost({ addPost, userId }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          credentials: 'username:password' // Replace with real credentials
         },
-        body: JSON.stringify({
-          base64Image,
-          fileName,
-        }),
+        body: JSON.stringify(postData)
       });
 
       if (!response.ok) {
