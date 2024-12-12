@@ -24,11 +24,11 @@ function CreatePost({ addPost, userId }) {
           fileName,
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to upload image.');
       }
-  
+
       const result = await response.json();
       console.log('Raw API Response:', result);
 
@@ -40,7 +40,7 @@ function CreatePost({ addPost, userId }) {
     }
   };
 
-  const postData = async (postData) => {
+  const createPostData = async (postData) => {
     try {
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/dev/forum', {
         method: 'POST',
@@ -93,7 +93,7 @@ function CreatePost({ addPost, userId }) {
           };
 
           // Post the data
-          const newPost = await postData(postData);
+          const newPost = await createPostData(postData);  // Changed from postData to createPostData
           console.log('Post created successfully:', newPost);
 
           if (addPost) {
