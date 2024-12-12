@@ -25,7 +25,7 @@ function Forum() {
 
   const isAuthorized = true; // Mock authorization check
 
-  const addPost = (newPost) => {
+  const createPost = (newPost) => {
     setPosts([...posts, { ...newPost, id: posts.length + 1 }]);
   };
 
