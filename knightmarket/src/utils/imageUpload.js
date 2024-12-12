@@ -1,6 +1,6 @@
 import { API_ENDPOINTS } from '../config/apis';
 
-export const uploadImageToS3 = async (base64Image, fileName) => {
+export const uploadImage = async (base64Image, fileName) => {
   try {
     const response = await fetch(API_ENDPOINTS.IMAGE_UPLOAD, {
       method: 'POST',
