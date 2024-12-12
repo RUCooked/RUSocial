@@ -82,7 +82,6 @@ function CreatePost({ addPost, userId }) {
           // Upload image and get URL
           const imageUrl = await uploadImage(base64Image, `post_${Date.now()}`);
           console.log('Image uploaded successfully:', imageUrl);
-          alert(`Image URL: ${imageUrl}`);
 
           // Prepare data for the post
           const postData = {
