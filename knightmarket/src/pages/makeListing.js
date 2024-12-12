@@ -28,50 +28,6 @@ function MakeListing({ addListing }) {
 
   return (
     <div>
-      <header style={styles.header}>
-        <div style={styles.logo}>
-          <img 
-            src="https://a.espncdn.com/guid/3f06733d-8d8a-7044-6b24-e0ba817e25f0/logos/primary_logo_on_white_color.png" // Rutgers logo URL, adjust accordingly
-            alt="Rutgers Logo"
-            style={styles.rutgersLogo}
-          />
-        </div>
-        <div style={styles.brand}>
-          <h1>KnightMarket</h1>
-          <p style={styles.tagline}>Create your listing and connect with the campus</p>
-        </div>
-        <nav style={styles.nav}>
-          <Link to="/" style={styles.navLink}>
-            <img src="https://via.placeholder.com/20" alt="Home Icon" style={styles.icon} /> Home
-          </Link>
-          <Link to="/marketplace" style={styles.navLink}>
-            <img src="https://via.placeholder.com/20" alt="Marketplace Icon" style={styles.icon} /> Marketplace
-          </Link>
-          <Link to="/forum" style={styles.navLink}>
-            <img src="https://via.placeholder.com/20" alt="Forum Icon" style={styles.icon} /> Forum
-          </Link>
-          <Link to="/messages" style={styles.navLink}>
-            <img src="https://via.placeholder.com/20" alt="Messages Icon" style={styles.icon} /> Messages
-          </Link>
-        </nav>
-        <div style={styles.userProfile}>
-          <img
-            src="rusocial_frontend_reactjs/src/pages/user-profile.png" // Placeholder image, replace with actual user profile image
-            alt="User Profile"
-            style={styles.profilePic}
-          />
-          <button style={styles.dropdownButton} onClick={() => setDropdownOpen(!dropdownOpen)}>
-            ▼
-          </button>
-          {dropdownOpen && (
-            <div style={styles.dropdownContent}>
-              <Link to="/settings" style={styles.dropdownLink}>Settings</Link>
-              <Link to="/profile" style={styles.dropdownLink}>User Profile</Link>
-              <Link to="/logout" style={styles.dropdownLink}>Log Out</Link>
-            </div>
-          )}
-        </div>
-      </header>
       <main style={styles.mainContent}>
         <div style={styles.container}>
           <h2>Create a New Listing</h2>

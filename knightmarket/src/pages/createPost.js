@@ -222,6 +222,8 @@ import { Container, Form, Button, Card } from 'react-bootstrap';
 
 function CreatePost({ addPost }) {
   const navigate = useNavigate();
+  const [image, setImage] = useState(null);
+
   const [formData, setFormData] = useState({
     title: '',
     content: ''
@@ -245,6 +247,10 @@ function CreatePost({ addPost }) {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
   };
 
   return (
@@ -276,6 +282,13 @@ function CreatePost({ addPost }) {
                 rows={6}
                 placeholder="Write your post content here..."
               />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Upload Image:</Form.Label>
+              <div className="outline- btn d-flex gap-2 justify-content-start">
+                <Form.Control type="file" multiple/>
+              </div>
             </Form.Group>
 
             <div className="d-flex gap-2 justify-content-end">
