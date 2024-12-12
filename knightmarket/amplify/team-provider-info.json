@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-knightmarket-dev-90bdb-authRole",
+      "UnauthRoleArn": "arn:aws:iam::147997151910:role/amplify-knightmarket-dev-90bdb-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::147997151910:role/amplify-knightmarket-dev-90bdb-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-knightmarket-dev-90bdb-deployment",
+      "UnauthRoleName": "amplify-knightmarket-dev-90bdb-unauthRole",
+      "StackName": "amplify-knightmarket-dev-90bdb",
+      "StackId": "arn:aws:cloudformation:us-east-2:147997151910:stack/amplify-knightmarket-dev-90bdb/de91d470-b715-11ef-bc6b-0aa4da91a2dd",
+      "AmplifyAppId": "d2lqlmsteck4d6"
+    },
+    "categories": {
+      "auth": {
+        "knightmarket8d8b61cb": {}
+      }
+    }
+  }
+}
