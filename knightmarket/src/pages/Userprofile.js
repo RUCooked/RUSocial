@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-
-
-const Profile = () => {
+const Userprofile = () => {
   const [followed, setFollowed] = useState(false);  // State for follow/unfollow
 
   // Toggle follow/unfollow button
@@ -10,8 +8,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="profile">
-      <div className="profile-header">
+    <div className="Userprofile">
+      <div className="Userprofile-header">
         <div className="profile-picture">
           <img src="https://via.placeholder.com/150" alt="Profile" />
         </div>
