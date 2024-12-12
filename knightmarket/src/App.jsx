@@ -6,6 +6,7 @@ import Marketplace from './pages/Marketplace';
 import MakeListing from './pages/makeListing'; 
 import Forum from './pages/Forum'; // Import Forum component
 import CreatePost from './pages/createPost'; // Import CreatePost component
+import Settings from './pages/Settings'; // Adjust path as needed
 import Login from './pages/Login';
 import './App.css';
 
@@ -22,6 +23,7 @@ function App() {
             <Route path="/forum" element={<Forum />} />
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
       </div>
