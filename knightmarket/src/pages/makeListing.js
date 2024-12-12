@@ -6,6 +6,7 @@ function MakeListing({ addListing }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
+    price: '', // Added price field
     description: ''
   });
   const [image, setImage] = useState(null);
@@ -29,10 +30,27 @@ function MakeListing({ addListing }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+
+    // Format the price field
+    if (name === 'price') {
+      // Remove non-numeric characters except commas and periods
+      const numericValue = value.replace(/[^0-9]/g, '');
+
+      // Add commas to the number
+      const formattedValue = numericValue
+        ? `$${Number(numericValue).toLocaleString('en-US')}`
+        : '';
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formattedValue
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleImageChange = (e) => {
@@ -45,6 +63,7 @@ function MakeListing({ addListing }) {
       <Card className="shadow-sm">
         <Card.Body>
           <Form onSubmit={handleSubmit}>
+
             <Form.Group controlId="listingTitle" className="mb-3">
               <Form.Label>Title</Form.Label>
               <Form.Control
@@ -54,6 +73,18 @@ function MakeListing({ addListing }) {
                 onChange={handleChange}
                 required
                 placeholder="Enter listing title"
+              />
+            </Form.Group>
+
+            <Form.Group controlId="listingPrice" className="mb-3">
+              <Form.Label>Price</Form.Label>
+              <Form.Control
+                type="text" 
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                required
+                placeholder="Enter listing price"
               />
             </Form.Group>
 
@@ -76,7 +107,6 @@ function MakeListing({ addListing }) {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                multiple
                 required
               />
             </Form.Group>
