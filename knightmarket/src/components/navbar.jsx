@@ -61,6 +61,8 @@ const NavigationBar = () => {
                     </Nav>
 
                     {/* User Profile Dropdown */}
+                    {/* TODO: IMPLEMENT USER STATE MANAGEMENT FOR LOGGED IN / LOGGED OUT. 
+                    IE: IF THEY'RE LOGGED OUT IT SHOULD ONLY BE 'Login' IN THE DROPDOWN */}
                     <NavDropdown
                         title={<PersonCircle size={24} />}
                         id="basic-nav-dropdown"
