@@ -31,6 +31,8 @@ function MakeListing({ addListing, userId }) {
       }
   
       const result = await response.json();
+      console.log('Raw API Response:', result);
+
       const imageUrls = JSON.parse(result.body).imageUrls;
       return imageUrls[0]; // Assuming single image upload
     } catch (err) {
@@ -75,6 +77,7 @@ function MakeListing({ addListing, userId }) {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64Image = reader.result.split(',')[1]; // Strip off the prefix
+        console.log('Base64 Image:', base64Image);
 
         try {
           // Upload image and get URL
