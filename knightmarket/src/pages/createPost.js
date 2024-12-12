@@ -271,24 +271,27 @@ function CreatePost({ addPost }) {
               />
             </Form.Group>
 
-            <Form.Group className="mb-3">
+            <Form.Group controlId="postContent" className="mb-3">
               <Form.Label>Content</Form.Label>
               <Form.Control
                 as="textarea"
+                rows={6}
                 name="content"
                 value={formData.content}
                 onChange={handleChange}
                 required
-                rows={6}
                 placeholder="Write your post content here..."
               />
             </Form.Group>
 
-            <Form.Group className="mb-3">
+            <Form.Group controlId="postImage" className="mb-3">
               <Form.Label>Upload Image:</Form.Label>
-              <div className="outline- btn d-flex gap-2 justify-content-start">
-                <Form.Control type="file" multiple/>
-              </div>
+                <Form.Control 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageChange} 
+                multiple
+                />
             </Form.Group>
 
             <div className="d-flex gap-2 justify-content-end">
