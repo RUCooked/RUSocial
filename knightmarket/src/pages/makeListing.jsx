@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import * as Amplify from 'aws-amplify';
 import { uploadImage } from '../utils/imageUpload';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+const{ Auth } = Amplify;
 
-function MakeListing({ addListing, userId }) {
+function MakeListing({ addListing }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -14,35 +16,55 @@ function MakeListing({ addListing, userId }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const fetchUserIdByEmail = async (email) => {
+    try {
+      const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'credentials': 'masterknight:chickenNugget452!' // Secure this later
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch user information.');
+      }
+
+      const data = await response.json();
+      if (data.length === 0) {
+        throw new Error('No user found with the provided email.');
+      }
+
+      return data[0].user_id; // Assuming the API returns an array of users
+    } catch (err) {
+      console.error('Error fetching user_id:', err);
+      throw err;
+    }
+  };
+
   const postListing = async (listingData) => {
     try {
-      // console.log('Credentials:', 'masterknight:chickenNugget452');
-      // console.log('user_id:', 3);
-      // console.log('title:', listingData.title);
-      // console.log('product_description:', listingData.product_description);
-      // console.log('product_price:', listingData.product_price);
-      // console.log('images_url:', listingData.images_url || '');
-      
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'credentials': 'masterknight:chickenNugget452!' // Need to make this more secure later
+          'credentials': 'masterknight:chickenNugget452!' // Secure this later
         },
         body: JSON.stringify({
-          user_id: 3, // Place holder, need to implement get user_id
+          user_id: listingData.user_id, // Pass user_id from database
           title: listingData.title,
           product_description: listingData.product_description,
           product_price: listingData.product_price,
-          images_url: listingData.images_url || '' 
+          images_url: listingData.images_url || ''
         })
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to post listing.');
       }
-  
+
       return await response.json();
     } catch (err) {
       console.error(err);
@@ -60,6 +82,13 @@ function MakeListing({ addListing, userId }) {
         throw new Error('Please upload an image.');
       }
 
+      // Get the current authenticated user's email
+      const user = await Auth.currentAuthenticatedUser();
+      const email = user.attributes.email; // Fetch email from Cognito user
+
+      // Fetch user_id using the email
+      const userId = await fetchUserIdByEmail(email);
+
       // Convert image to Base64
       const reader = new FileReader();
       reader.onloadend = async () => {
@@ -72,7 +101,7 @@ function MakeListing({ addListing, userId }) {
 
           // Prepare data for the listing
           const listingData = {
-            user_id: userId,
+            user_id: userId, // Include user_id
             title: formData.title,
             product_description: formData.description,
             product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),

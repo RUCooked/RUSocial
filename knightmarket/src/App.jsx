@@ -18,6 +18,7 @@ import { addUserToDatabase } from './utils/addUserToDb'
 Amplify.configure(awsExports);
 
 // Separate RequireAuth component
+
 function RequireAuth({ children }) {
   const { user } = useAuthenticator();
   const navigate = useNavigate();
