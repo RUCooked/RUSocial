@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { uploadImage } from '../utils/imageUpload';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 
@@ -12,33 +13,33 @@ function CreatePost({ addPost, userId }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const uploadImage = async (base64Image, fileName) => {
-    try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/images', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          base64Image,
-          fileName,
-        }),
-      });
+  // const uploadImage = async (base64Image, fileName) => {
+  //   try {
+  //     const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/images', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         base64Image,
+  //         fileName,
+  //       }),
+  //     });
 
-      if (!response.ok) {
-        throw new Error('Failed to upload image.');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to upload image.');
+  //     }
 
-      const result = await response.json();
-      console.log('Raw API Response:', result);
+  //     const result = await response.json();
+  //     console.log('Raw API Response:', result);
 
-      const imageUrls = JSON.parse(result.body).imageUrls;
-      return imageUrls[0]; // Assuming single image upload
-    } catch (err) {
-      console.error(err);
-      throw new Error('Image upload failed.');
-    }
-  };
+  //     const imageUrls = JSON.parse(result.body).imageUrls;
+  //     return imageUrls[0]; // Assuming single image upload
+  //   } catch (err) {
+  //     console.error(err);
+  //     throw new Error('Image upload failed.');
+  //   }
+  // };
 
   const createPostData = async (postData) => {
     try {
@@ -82,25 +83,26 @@ function CreatePost({ addPost, userId }) {
           // Upload image and get URL
           const imageUrl = await uploadImage(base64Image, `post_${Date.now()}`);
           console.log('Image uploaded successfully:', imageUrl);
+          alert(`Image URL: ${imageUrl}`);
 
           // Prepare data for the post
-          const postData = {
-            user_id: userId,
-            title: formData.title,
-            content: formData.content,
-            image_url: imageUrl
-          };
+          // const postData = {
+          //   user_id: userId,
+          //   title: formData.title,
+          //   content: formData.content,
+          //   image_url: imageUrl
+          // };
 
-          // Post the data
-          const newPost = await createPostData(postData);  // Changed from postData to createPostData
-          console.log('Post created successfully:', newPost);
+          // // Post the data
+          // const newPost = await createPostData(postData);  // Changed from postData to createPostData
+          // console.log('Post created successfully:', newPost);
 
-          if (addPost) {
-            addPost(newPost);
-          }
+          // if (addPost) {
+          //   addPost(newPost);
+          // }
 
           // Navigate back to the forum
-          navigate('/forum');
+          // navigate('/forum');
         } catch (err) {
           setError(err.message);
         } finally {
