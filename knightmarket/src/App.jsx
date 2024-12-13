@@ -13,7 +13,7 @@ import Forum from './pages/Forum';
 import CreatePost from './pages/createPost';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
-import addUserToDatabase from './utils/addUserToDb'
+import { addUserToDatabase } from './utils/addUserToDb'
 
 Amplify.configure(awsExports);
 
