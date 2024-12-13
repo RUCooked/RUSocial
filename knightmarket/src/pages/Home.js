@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { Shop, ChatSquareText, Search, ArrowRight, Star } from 'react-bootstrap-icons';
+import { Shop, ChatSquareText, Search, ArrowRight } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
