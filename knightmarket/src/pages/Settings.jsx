@@ -9,18 +9,25 @@ import {
   TrashFill,
   ShieldFill,
   PersonXFill,
-  ArrowLeftShort
+  ArrowLeftShort,
+  SaveFill,
+  PencilFill,
 } from 'react-bootstrap-icons';
 
 function Settings() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
+
+  const [username, setUsername] = useState('CurrentUsername');
+  const [displayName, setDisplayName] = useState('Current Display Name');
   const [profilePicture, setProfilePicture] = useState(null);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('user@rutgers.edu');
   const [password, setPassword] = useState('');
   const [twoFactorAuth, setTwoFactorAuth] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
+
+  // Edit mode states
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [isEditingDisplayName, setIsEditingDisplayName] = useState(false);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -40,6 +47,7 @@ function Settings() {
 
   return (
     <Container className="py-4">
+      {/* Back Button */}
       <Button
         variant="danger"
         onClick={() => navigate(-1)}
@@ -48,6 +56,7 @@ function Settings() {
         <ArrowLeftShort size={20} /> Back
       </Button>
 
+      {/* Header */}
       <div className="d-flex align-items-center mb-4 pb-2 border-bottom">
         <ShieldFill className="text-danger me-2" size={30} />
         <h1 className="mb-0">Settings</h1>
@@ -62,39 +71,81 @@ function Settings() {
         </Card.Header>
         <Card.Body>
           <Form>
-            <Form.Group className="mb-3">
-              <Form.Label className="d-flex align-items-center">
-                <PersonFill className="text-danger me-2" /> Username
-              </Form.Label>
-              <Form.Control
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                // TODO: MAKE THIS WORK WITH OUR USER API
-                placeholder="User's Username"
-              />
-            </Form.Group>
+            {/* Username */}
+<Form.Group className="mb-3">
+  <Form.Label className="d-flex align-items-center">
+    <PersonFill className="text-danger me-2" /> Username
+  </Form.Label>
+  {isEditingUsername ? (
+    <div className="d-flex gap-2">
+      <Form.Control
+        type="text"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <Button
+        variant="success"
+        className="d-flex align-items-center"
+        onClick={() => setIsEditingUsername(false)}
+      >
+        <SaveFill /> Save
+      </Button>
+    </div>
+  ) : (
+    <div className="d-flex justify-content-between align-items-center">
+      <span>{username}</span>
+      <Button
+        variant="danger" // Changed to red
+        size="sm"
+        onClick={() => setIsEditingUsername(true)}
+        className="d-flex align-items-center gap-1"
+      >
+        <PencilFill /> Edit
+      </Button>
+    </div>
+  )}
+</Form.Group>
+            {/* Display Name */}
+<Form.Group className="mb-3">
+  <Form.Label className="d-flex align-items-center">
+    <PersonFill className="text-danger me-2" /> Display Name
+  </Form.Label>
+  {isEditingDisplayName ? (
+    <div className="d-flex gap-2">
+      <Form.Control
+        type="text"
+        value={displayName}
+        onChange={(e) => setDisplayName(e.target.value)}
+      />
+      <Button
+        variant="success"
+        className="d-flex align-items-center"
+        onClick={() => setIsEditingDisplayName(false)}
+      >
+        <SaveFill /> Save
+      </Button>
+    </div>
+  ) : (
+    <div className="d-flex justify-content-between align-items-center">
+      <span>{displayName}</span>
+      <Button
+        variant="danger" // Changed to red
+        size="sm"
+        onClick={() => setIsEditingDisplayName(true)}
+        className="d-flex align-items-center gap-1"
+      >
+        <PencilFill /> Edit
+      </Button>
+    </div>
+  )}
+</Form.Group>
 
-            {/* <Form.Group className="mb-3">
-              <Form.Label className="d-flex align-items-center">
-                <PersonFill className="text-danger me-2" /> Display Name
-              </Form.Label>
-              <Form.Control
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Enter your display name"
-              />
-            </Form.Group> */}
-
+            {/* Profile Picture */}
             <Form.Group className="mb-3">
               <Form.Label className="d-flex align-items-center">
                 <CameraFill className="text-danger me-2" /> Profile Picture
               </Form.Label>
-              <Form.Control
-                type="file"
-                onChange={handleFileUpload}
-              />
+              <Form.Control type="file" onChange={handleFileUpload} />
             </Form.Group>
 
             {profilePicture && (
@@ -107,6 +158,7 @@ function Settings() {
               />
             )}
 
+            {/* Email */}
             <Form.Group className="mb-3">
               <Form.Label className="d-flex align-items-center">
                 <EnvelopeFill className="text-danger me-2" /> Primary Contact Email
@@ -117,17 +169,16 @@ function Settings() {
                 disabled
                 readOnly
                 className="bg-light"
-                placeholder="user@rutgers.edu"
               />
               <Form.Text className="text-muted">
-                Email cannot be changed as it is linked to your Rutgers account
+                Email cannot be changed as it is linked to your Rutgers account.
               </Form.Text>
             </Form.Group>
           </Form>
         </Card.Body>
       </Card>
 
-      {/* Security Card */}
+      {/* Security Section */}
       <Card className="mb-4 shadow-sm">
         <Card.Header className="bg-white">
           <h2 className="h5 mb-0 d-flex align-items-center text-danger">
@@ -136,6 +187,7 @@ function Settings() {
         </Card.Header>
         <Card.Body>
           <Form>
+            {/* Password */}
             <Form.Group className="mb-3">
               <Form.Label className="d-flex align-items-center">
                 <LockFill className="text-danger me-2" /> Change Password
@@ -144,24 +196,24 @@ function Settings() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="User's Password"
+                placeholder="Enter new password"
               />
             </Form.Group>
 
+            {/* Two-Factor Authentication */}
             <Form.Check
               type="checkbox"
               id="two-factor-auth"
               label="Enable Two-Factor Authentication"
               checked={twoFactorAuth}
               onChange={() => setTwoFactorAuth(!twoFactorAuth)}
-              className="mb-3 d-flex"
-              style={{ gap: '10px' }}
+              className="mb-3 d-flex align-items-center gap-2"
             />
           </Form>
         </Card.Body>
       </Card>
 
-      {/* Privacy Controls Card */}
+      {/* Privacy Controls Section */}
       <Card className="shadow-sm">
         <Card.Header className="bg-white">
           <h2 className="h5 mb-0 d-flex align-items-center text-danger">
@@ -169,6 +221,7 @@ function Settings() {
           </h2>
         </Card.Header>
         <Card.Body>
+          {/* Block User */}
           <Button
             variant="danger"
             onClick={handleBlockUser}
@@ -177,6 +230,7 @@ function Settings() {
             <PersonXFill /> Block User By Username
           </Button>
 
+          {/* Blocked Users List */}
           <ListGroup>
             {blockedUsers.map((user, index) => (
               <ListGroup.Item
