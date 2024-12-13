@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import { Amplify } from 'aws-amplify';
-import { getCurrentUser, fetchUserAttributes } from '@aws-amplify/auth';
-import { Hub } from '@aws-amplify/core'; 
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import awsExports from './aws-exports';
@@ -14,7 +12,6 @@ import Forum from './pages/Forum';
 import CreatePost from './pages/createPost';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
-import { addUserToDatabase } from './utils/addUserToDb'
 
 Amplify.configure(awsExports);
 
@@ -30,42 +27,6 @@ function RequireAuth({ children }) {
   }, [user, navigate]);
 
   return user ? children : null;
-}
-
-function AuthEventListener() {
-  useEffect(() => {
-    const listener = Hub.listen('auth', async (data) => {
-      console.log('Auth event:', data);
-      const { event, data: eventData } = data.payload;
-      
-      try {
-        switch (event) {
-          case 'signedIn':
-            console.log('signedIn event:', eventData);
-            if (eventData?.username) {
-              const userAttributes = await fetchUserAttributes();
-              console.log('User attributes:', userAttributes);
-
-              await addUserToDatabase({
-                username: eventData.username,
-                user_id: eventData.userId,
-                email: userAttributes.email,
-              });
-              console.log('Successfully added user to database');
-            }
-            break;
-          default:
-            console.log('Other auth event:', event, eventData);
-        }
-      } catch (error) {
-        console.error('Error handling auth event:', event, error);
-      }
-    });
-
-    return () => listener();
-  }, []);
-
-  return null;
 }
 
 function AppLayout() {
@@ -111,7 +72,6 @@ function AppLayout() {
 function App() {
   return (
     <Authenticator.Provider>
-      <AuthEventListener />
       <Router>
         <AppLayout />
       </Router>
