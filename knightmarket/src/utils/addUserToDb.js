@@ -5,15 +5,14 @@ export const addUserToDatabase = async (userAttributes) => {
         const response = await fetch(API_ENDPOINTS.USER, {
             method: 'POST',
             headers: {
-                'Content-Type': 'json/application',
-                'credentials': 'masterknight:chickenNugget452!' // replace with JWT in Header
+                'Content-Type': 'application/json',
             },
-            body: {
+            body: JSON.stringify({
                 'username': userAttributes.username,
                 'email': userAttributes.email,
                 'bio': '',
-            }
-        });
+            })
+        },);
 
         if (!response.ok) {
             throw new Error('Failed to create user in database');

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
-import { Amplify} from 'aws-amplify';
+import { Amplify } from 'aws-amplify';
+import { getCurrentUser, fetchUserAttributes } from '@aws-amplify/auth';
 import { Hub } from '@aws-amplify/core'; 
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
@@ -33,29 +34,35 @@ function RequireAuth({ children }) {
 
 function AuthEventListener() {
   useEffect(() => {
-    const listener = Hub.listen('auth', ({ payload: { event, data } }) => {
-      switch (event) {
-        case 'signUp':
-          console.log('User signed up:', data);
-          break;
-        case 'signIn':
-          console.log('User signed in:', data);
-          break;
-        case 'signUp_confirm_success':
-          console.log('User confirmed signup, adding to database:', data);
-          if (data.attributes) {
-            addUserToDatabase(data.attributes);
-          }
-          break;
-        case 'autoSignIn':
-          console.log('Auto Sign In after Sign Up:', data);
-          break;
-        default:
-          console.log('default');
+    const listener = Hub.listen('auth', async (data) => {
+      console.log('Auth event:', data);
+      const { event, data: eventData } = data.payload;
+      
+      try {
+        switch (event) {
+          case 'signedIn':
+            console.log('signedIn event:', eventData);
+            if (eventData?.username) {
+              const userAttributes = await fetchUserAttributes();
+              console.log('User attributes:', userAttributes);
+
+              await addUserToDatabase({
+                username: eventData.username,
+                user_id: eventData.userId,
+                email: userAttributes.email,
+              });
+              console.log('Successfully added user to database');
+            }
+            break;
+          default:
+            console.log('Other auth event:', event, eventData);
+        }
+      } catch (error) {
+        console.error('Error handling auth event:', event, error);
       }
     });
 
-    return () => listener(); // Cleanup
+    return () => listener();
   }, []);
 
   return null;
