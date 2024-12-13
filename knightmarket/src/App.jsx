@@ -61,7 +61,6 @@ function AuthEventListener() {
   return null;
 }
 
-// Main app layout component
 function AppLayout() {
   return (
     <div className="App">
@@ -102,7 +101,6 @@ function AppLayout() {
   );
 }
 
-// Main App component
 function App() {
   return (
     <Authenticator.Provider>
