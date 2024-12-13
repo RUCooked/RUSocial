@@ -45,6 +45,28 @@ function Settings() {
     setBlockedUsers(blockedUsers.filter((user) => user !== username));
   };
 
+  // Function to send PUT requests
+  const updateUser = async (field, value) => {
+    try {
+      const response = await fetch('/api/user', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [field]: value }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user details');
+      }
+
+      console.log(`User ${field} updated successfully`);
+    } catch (error) {
+      console.error(error.message);
+      alert('Error updating user details. Please try again.');
+    }
+  };
+
   return (
     <Container className="py-4">
       {/* Back Button */}
@@ -72,73 +94,80 @@ function Settings() {
         <Card.Body>
           <Form>
             {/* Username */}
-<Form.Group className="mb-3">
-  <Form.Label className="d-flex align-items-center">
-    <PersonFill className="text-danger me-2" /> Username
-  </Form.Label>
-  {isEditingUsername ? (
-    <div className="d-flex gap-2">
-      <Form.Control
-        type="text"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <Button
-        variant="success"
-        className="d-flex align-items-center"
-        onClick={() => setIsEditingUsername(false)}
-      >
-        <SaveFill /> Save
-      </Button>
-    </div>
-  ) : (
-    <div className="d-flex justify-content-between align-items-center">
-      <span>{username}</span>
-      <Button
-        variant="danger" // Changed to red
-        size="sm"
-        onClick={() => setIsEditingUsername(true)}
-        className="d-flex align-items-center gap-1"
-      >
-        <PencilFill /> Edit
-      </Button>
-    </div>
-  )}
-</Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center">
+                <PersonFill className="text-danger me-2" /> Username
+              </Form.Label>
+              {isEditingUsername ? (
+                <div className="d-flex gap-2">
+                  <Form.Control
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                  <Button
+                    variant="success"
+                    className="d-flex align-items-center"
+                    onClick={() => {
+                      updateUser('username', username);
+                      setIsEditingUsername(false);
+                    }}
+                  >
+                    <SaveFill /> Save
+                  </Button>
+                </div>
+              ) : (
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>{username}</span>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setIsEditingUsername(true)}
+                    className="d-flex align-items-center gap-1"
+                  >
+                    <PencilFill /> Edit
+                  </Button>
+                </div>
+              )}
+            </Form.Group>
+
             {/* Display Name */}
-<Form.Group className="mb-3">
-  <Form.Label className="d-flex align-items-center">
-    <PersonFill className="text-danger me-2" /> Display Name
-  </Form.Label>
-  {isEditingDisplayName ? (
-    <div className="d-flex gap-2">
-      <Form.Control
-        type="text"
-        value={displayName}
-        onChange={(e) => setDisplayName(e.target.value)}
-      />
-      <Button
-        variant="success"
-        className="d-flex align-items-center"
-        onClick={() => setIsEditingDisplayName(false)}
-      >
-        <SaveFill /> Save
-      </Button>
-    </div>
-  ) : (
-    <div className="d-flex justify-content-between align-items-center">
-      <span>{displayName}</span>
-      <Button
-        variant="danger" // Changed to red
-        size="sm"
-        onClick={() => setIsEditingDisplayName(true)}
-        className="d-flex align-items-center gap-1"
-      >
-        <PencilFill /> Edit
-      </Button>
-    </div>
-  )}
-</Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center">
+                <PersonFill className="text-danger me-2" /> Display Name
+              </Form.Label>
+              {isEditingDisplayName ? (
+                <div className="d-flex gap-2">
+                  <Form.Control
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                  />
+                  <Button
+                    variant="success"
+                    className="d-flex align-items-center"
+                    onClick={() => {
+                      updateUser('displayName', displayName);
+                      setIsEditingDisplayName(false);
+                    }}
+                  >
+                    <SaveFill /> Save
+                  </Button>
+                </div>
+              ) : (
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>{displayName}</span>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setIsEditingDisplayName(true)}
+                    className="d-flex align-items-center gap-1"
+                  >
+                    <PencilFill /> Edit
+                  </Button>
+                </div>
+              )}
+            </Form.Group>
 
             {/* Profile Picture */}
             <Form.Group className="mb-3">
@@ -175,80 +204,6 @@ function Settings() {
               </Form.Text>
             </Form.Group>
           </Form>
-        </Card.Body>
-      </Card>
-
-      {/* Security Section */}
-      <Card className="mb-4 shadow-sm">
-        <Card.Header className="bg-white">
-          <h2 className="h5 mb-0 d-flex align-items-center text-danger">
-            <LockFill className="me-2" /> Security & Access
-          </h2>
-        </Card.Header>
-        <Card.Body>
-          <Form>
-            {/* Password */}
-            <Form.Group className="mb-3">
-              <Form.Label className="d-flex align-items-center">
-                <LockFill className="text-danger me-2" /> Change Password
-              </Form.Label>
-              <Form.Control
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter new password"
-              />
-            </Form.Group>
-
-            {/* Two-Factor Authentication */}
-            <Form.Check
-              type="checkbox"
-              id="two-factor-auth"
-              label="Enable Two-Factor Authentication"
-              checked={twoFactorAuth}
-              onChange={() => setTwoFactorAuth(!twoFactorAuth)}
-              className="mb-3 d-flex align-items-center gap-2"
-            />
-          </Form>
-        </Card.Body>
-      </Card>
-
-      {/* Privacy Controls Section */}
-      <Card className="shadow-sm">
-        <Card.Header className="bg-white">
-          <h2 className="h5 mb-0 d-flex align-items-center text-danger">
-            <PersonXFill className="me-2" /> Privacy Controls
-          </h2>
-        </Card.Header>
-        <Card.Body>
-          {/* Block User */}
-          <Button
-            variant="danger"
-            onClick={handleBlockUser}
-            className="d-flex align-items-center gap-2 mb-3"
-          >
-            <PersonXFill /> Block User By Username
-          </Button>
-
-          {/* Blocked Users List */}
-          <ListGroup>
-            {blockedUsers.map((user, index) => (
-              <ListGroup.Item
-                key={index}
-                className="d-flex justify-content-between align-items-center"
-              >
-                {user}
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => handleUnblockUser(user)}
-                  className="d-flex align-items-center gap-2"
-                >
-                  <TrashFill /> Unblock
-                </Button>
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
         </Card.Body>
       </Card>
     </Container>
