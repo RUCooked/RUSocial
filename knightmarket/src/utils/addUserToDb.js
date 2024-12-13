@@ -8,8 +8,9 @@ export const addUserToDatabase = async (userAttributes) => {
             'credentials': 'masterknight:chickenNugget452!'
         },
         body: {
+            'username': userAttributes.username,
             'email': userAttributes.email,
-            'password': '',
+            'bio': '',
         }
     })
 }
