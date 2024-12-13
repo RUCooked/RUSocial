@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
-import { Amplify } from 'aws-amplify';
+import { Amplify, Hub } from 'aws-amplify';
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import awsExports from './aws-exports';
@@ -12,6 +12,7 @@ import Forum from './pages/Forum';
 import CreatePost from './pages/createPost';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
+import addUserToDatabase from './utils/addUserToDb'
 
 Amplify.configure(awsExports);
 
@@ -27,6 +28,36 @@ function RequireAuth({ children }) {
   }, [user, navigate]);
 
   return user ? children : null;
+}
+
+function AuthEventListener() {
+  useEffect(() => {
+    const listener = Hub.listen('auth', ({ payload: { event, data } }) => {
+      switch (event) {
+        case 'signUp':
+          console.log('User signed up:', data);
+          break;
+        case 'signIn':
+          console.log('User signed in:', data);
+          break;
+        case 'signUp_confirm_success':
+          console.log('User confirmed signup, adding to database:', data);
+          if (data.attributes) {
+            addUserToDatabase(data.attributes);
+          }
+          break;
+        case 'autoSignIn':
+          console.log('Auto Sign In after Sign Up:', data);
+          break;
+        default:
+          console.log('default');
+      }
+    });
+
+    return () => listener(); // Cleanup
+  }, []);
+
+  return null;
 }
 
 // Main app layout component
@@ -74,6 +105,7 @@ function AppLayout() {
 function App() {
   return (
     <Authenticator.Provider>
+      <AuthEventListener />
       <Router>
         <AppLayout />
       </Router>
