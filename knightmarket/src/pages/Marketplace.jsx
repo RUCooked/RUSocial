@@ -88,7 +88,7 @@ function Marketplace() {
         <Row xs={1} md={2} lg={3} className="g-4">
           {listings.map((listing) => (
             <Col key={listing.id}>
-              <Card className="h-100 d-flex flex-column">
+              <Card className="h-100 d-flex flex-column text-start">
                 <Card.Img 
                   variant="top" 
                   src={listing.images[0] || '/placeholder.jpg'} // Show the first image or a placeholder
@@ -96,11 +96,14 @@ function Marketplace() {
                   style={{ height: '200px', objectFit: 'cover' }}
                 />
                 <Card.Body className="d-flex flex-column">
-                  <Card.Title className="text-truncate" title={listing.title}>
+                  <Card.Title 
+                    className="text-truncate" 
+                    title={listing.title}
+                  >
                     {listing.title}
                   </Card.Title>
                   <Card.Text 
-                    className="text-truncate" 
+                    className="text-truncate"
                     style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     title={listing.description} // Tooltip shows full text on hover
                   >
