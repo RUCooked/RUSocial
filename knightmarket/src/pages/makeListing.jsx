@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import * as Amplify from 'aws-amplify';
 import { uploadImage } from '../utils/imageUpload';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+const{ Auth } = Amplify;
 
-function MakeListing({ addListing, userId }) {
+function MakeListing({ addListing }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -14,47 +16,53 @@ function MakeListing({ addListing, userId }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // const uploadImage = async (base64Image, fileName) => {
-  //   try {
-  //     const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/images', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         base64Image,
-  //         fileName,
-  //       }),
-  //     });
-  
-  //     if (!response.ok) {
-  //       throw new Error('Failed to upload image.');
-  //     }
-  
-  //     const result = await response.json();
-  //     console.log('Raw API Response:', result);
-
-  //     const imageUrls = JSON.parse(result.body).imageUrls;
-  //     return imageUrls[0]; // Assuming single image upload
-  //   } catch (err) {
-  //     console.error(err);
-  //     throw new Error('Image upload failed.');
-  //   }
-  // };
-
-  const postListing = async (listingData) => {
+  const fetchUserIdByEmail = async (email) => {
     try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/dev/marketplace', {
-        method: 'POST',
+      const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          credentials: 'username:password' // Replace with real credentials
-        },
-        body: JSON.stringify(listingData)
+          'credentials': 'masterknight:chickenNugget452!' // Secure this later
+        }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to post listing.');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch user information.');
+      }
+
+      const data = await response.json();
+      if (data.length === 0) {
+        throw new Error('No user found with the provided email.');
+      }
+
+      return data[0].user_id; // Assuming the API returns an array of users
+    } catch (err) {
+      console.error('Error fetching user_id:', err);
+      throw err;
+    }
+  };
+
+  const postListing = async (listingData) => {
+    try {
+      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'credentials': 'masterknight:chickenNugget452!' // Secure this later
+        },
+        body: JSON.stringify({
+          user_id: listingData.user_id, // Pass user_id from database
+          title: listingData.title,
+          product_description: listingData.product_description,
+          product_price: listingData.product_price,
+          images_url: listingData.images_url || ''
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to post listing.');
       }
 
       return await response.json();
@@ -74,37 +82,42 @@ function MakeListing({ addListing, userId }) {
         throw new Error('Please upload an image.');
       }
 
+      // Get the current authenticated user's email
+      const user = await Auth.currentAuthenticatedUser();
+      const email = user.attributes.email; // Fetch email from Cognito user
+
+      // Fetch user_id using the email
+      const userId = await fetchUserIdByEmail(email);
+
       // Convert image to Base64
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64Image = reader.result.split(',')[1]; // Strip off the prefix
-        console.log('Base64 Image:', base64Image);
 
         try {
           // Upload image and get URL
           const imageUrl = await uploadImage(base64Image, `listing_${Date.now()}`);
           console.log('Image uploaded successfully:', imageUrl);
-          alert(`Image URL: ${imageUrl}`);
 
-          // // Prepare data for the listing
-          // const listingData = {
-          //   user_id: userId,
-          //   title: formData.title,
-          //   product_description: formData.description,
-          //   product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
-          //   images_url: imageUrl
-          // };
+          // Prepare data for the listing
+          const listingData = {
+            user_id: userId, // Include user_id
+            title: formData.title,
+            product_description: formData.description,
+            product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
+            images_url: imageUrl
+          };
 
-          // // Post the listing
-          // const newListing = await postListing(listingData);
-          // console.log('Listing created successfully:', newListing);
+          // Post the listing
+          const newListing = await postListing(listingData);
+          console.log('Listing created successfully:', newListing);
 
-          // if (addListing) {
-          //   addListing(newListing);
-          // }
+          if (addListing) {
+            addListing(newListing);
+          }
 
-          // // Navigate back to the marketplace
-          // navigate('/marketplace');
+          // Navigate back to the marketplace
+          navigate('/marketplace');
         } catch (err) {
           setError(err.message);
         } finally {
