@@ -9,7 +9,6 @@ const NavigationBar = () => {
     const { user, signOut } = useAuthenticator();
     const currentPath = location.pathname;
 
-    // Function to check if a path is active
     const isActive = (path) => {
         if (path === '/') {
             return currentPath === '/';
@@ -17,10 +16,10 @@ const NavigationBar = () => {
         return currentPath.startsWith(path);
     };
 
-
     return (
-        <Navbar bg="danger" variant="dark" expand="lg" sticky="top">
+        <Navbar bg="danger" variant="dark" expand="lg" className="py-2">
             <Container>
+                {/* Logo and Brand */}
                 <div className="d-flex align-items-center">
                     <img
                         src="https://a.espncdn.com/guid/3f06733d-8d8a-7044-6b24-e0ba817e25f0/logos/primary_logo_on_white_color.png"
@@ -42,6 +41,7 @@ const NavigationBar = () => {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
 
                 <Navbar.Collapse id="basic-navbar-nav">
+                    {/* Navigation Links */}
                     <Nav className="mx-auto">
                         <Nav.Link
                             as={Link}
@@ -78,8 +78,6 @@ const NavigationBar = () => {
                     </Nav>
 
                     {/* User Profile Dropdown */}
-                    {/* TODO: IMPLEMENT USER STATE MANAGEMENT FOR LOGGED IN / LOGGED OUT. 
-                    IE: IF THEY'RE LOGGED OUT IT SHOULD ONLY BE 'Login' IN THE DROPDOWN */}
                     <NavDropdown
                         title={<PersonCircle size={24} />}
                         id="basic-nav-dropdown"
