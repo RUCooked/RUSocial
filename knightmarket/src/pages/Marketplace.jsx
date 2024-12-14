@@ -146,7 +146,7 @@ function Marketplace() {
         </Alert>
       )}
 
-{!loading && !error && (
+      {!loading && !error && (
         <>
           {filteredListings.length > 0 ? (
             <Row xs={1} md={2} lg={3} className="g-4">
@@ -159,7 +159,7 @@ function Marketplace() {
                         src={listing.images[0]}
                         alt={listing.title}
                         style={{
-                          height: '350px',
+                          height: '380px',
                           objectFit: 'cover',
                         }}
                       />
@@ -198,6 +198,7 @@ function Marketplace() {
                       </Card.Text>
                       <Button
                         variant="primary"
+                        onClick={() => handleViewDetails(listing)}
                         className="mt-auto"
                       >
                         View Details
@@ -220,7 +221,47 @@ function Marketplace() {
         </>
       )}
 
-
+      {/* Modal for Detailed View */}
+      <Modal 
+        show={showModal} 
+        onHide={handleCloseModal} 
+        centered
+        size="lg" // Makes the modal wider
+        fullscreen="md-down"
+        >
+        <Modal.Header closeButton>
+          <Modal.Title>{selectedListing?.title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedListing && (
+            <>
+              <Image
+                src={selectedListing.images[0] || '/placeholder.jpg'}
+                alt={selectedListing.title}
+                className="mb-3"
+                style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
+                rounded
+              />
+              <h5 className="text-muted">Description</h5>
+              <p>{selectedListing.description}</p>
+              <h5 className="text-muted">Price</h5>
+              <p>${selectedListing.price}</p>
+              <div className="d-flex align-items-center mb-3">
+                <PersonCircle
+                  size={50} // Set the size to match the original profile picture size
+                  className="me-2" // Add some margin to the right for spacing
+                  style={{ color: '#6c757d' }} // Optional: Adjust color to match your design
+                />
+                <div>
+                  <p className="mb-0"><strong>User Name</strong></p> {/* Placeholder for user name */}
+                  <Button variant="primary" size="sm">Message User</Button>
+                </div>
+              </div>
+            </>
+          )}
+        </Modal.Body>
+      </Modal>
+      
       {/* Offcanvas for Filters */}
       <Offcanvas show={showOffcanvas} onHide={() => setShowOffcanvas(false)} placement="start">
         <Offcanvas.Header closeButton>
