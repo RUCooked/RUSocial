@@ -92,8 +92,8 @@ function CreatePost({ addPost, userId }) {
           // Prepare data for the post
           const postData = {
             title: formData.title,
-            user_id: userId,
-            content: formData.content,
+            author_id: userId,
+            body: formData.content,
             image_url: imageUrl
           };
 
