@@ -130,19 +130,21 @@ function MakeListing({ addListing }) {
     const { name, value } = e.target;
 
     if (name === 'price') {
-      const numericValue = value.replace(/[^0-9]/g, '');
-      const formattedValue = numericValue
-        ? `$${Number(numericValue).toLocaleString('en-US')}`
-        : '';
-      setFormData((prev) => ({
-        ...prev,
-        [name]: formattedValue
-      }));
+        // Allow only numbers and a single decimal point
+        const numericValue = value.replace(/[^0-9.]/g, ''); // Strip everything except numbers and '.'
+        const formattedValue = numericValue.match(/^\d*(\.\d{0,2})?$/) // Match up to 2 decimal places
+            ? `$${numericValue}`
+            : formData.price; // Keep the previous valid value if invalid input
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: formattedValue
+        }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value
-      }));
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
     }
   };
 

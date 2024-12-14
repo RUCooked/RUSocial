@@ -39,7 +39,7 @@ function Marketplace() {
         title: post.title,
         description: post.product_description,
         images: post.images_url || [],
-        price: post.product_price,
+        price: parseFloat(post.product_price), // Ensure the price is a number
         datePosted: post.date_posted,
         updatedAt: post.updated_at
       }));
