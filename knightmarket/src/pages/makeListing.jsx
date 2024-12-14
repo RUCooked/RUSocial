@@ -16,32 +16,6 @@ function MakeListing({ addListing }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // const fetchUserIdByEmail = async (email) => {
-  //   const verifiedHeader = await getAuthHeaders();
-
-  //   try {
-  //     const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?email=${encodeURIComponent(email)}`, {
-  //       method: 'GET',
-  //       headers: verifiedHeader,
-  //     });
-
-  //     if (!response.ok) {
-  //       const errorData = await response.json();
-  //       throw new Error(errorData.message || 'Failed to fetch user information.');
-  //     }
-
-  //     const data = await response.json();
-  //     if (data.length === 0) {
-  //       throw new Error('No user found with the provided email.');
-  //     }
-
-  //     return data[0].user_id; // Assuming the API returns an array of users
-  //   } catch (err) {
-  //     console.error('Error fetching user_id:', err);
-  //     throw err;
-  //   }
-  // };
-
   const postListing = async (listingData) => {
     const verifiedHeader = await getAuthHeaders();
     try {
@@ -80,8 +54,6 @@ function MakeListing({ addListing }) {
       }
 
       const { userId } = await getCurrentUser();
-      // const email = user.attributes.email; // Fetch email from Cognito user
-      // const userId = await fetchUserIdByEmail(email);
 
       // Convert image to Base64
       const reader = new FileReader();
