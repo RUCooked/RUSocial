@@ -1,21 +1,18 @@
-import { Auth } from 'aws-amplify';
+import { fetchAuthSession } from "@aws-amplify/auth";
 
 export async function getAuthToken() {
     try {
-      const session = await Auth.currentSession();
-      return session.getAccessToken().getJwtToken();
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        try {
-          await Auth.currentAuthenticatedUser();
-          // Retry getting the session
-          const newSession = await Auth.currentSession();
-          return newSession.getAccessToken().getJwtToken();
-        } catch (refreshError) {
-          console.error('Failed to refresh token:', refreshError);
-          throw new Error('Authentication required');
+        const session = await fetchAuthSession();
+        const jwt = session.tokens?.accessToken?.toString();
+        if (jwt) {
+            console.log("Access Token obtained successfully");
+            return jwt;
+        } else {
+            console.warn("No access token found in session");
+            return null;
         }
-      }
-      throw error;
+    } catch (error) {
+        console.error("Error fetching auth session:", error);
+        return null;
     }
-  }
+}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import * as Amplify from 'aws-amplify';
 import { uploadImage } from '../utils/imageUpload';
+import { getAuthToken } from '../utils/getJWT';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 const{ Auth } = Amplify;
