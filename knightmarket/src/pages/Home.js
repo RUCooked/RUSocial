@@ -40,7 +40,7 @@ const Home = () => {
             <Col md={6}>
               <img 
                 src="/api/placeholder/600/400"
-                alt="KnightMarket Preview"
+                alt="KnightMarket"
                 className="img-fluid rounded shadow"
               />
             </Col>
