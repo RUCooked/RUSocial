@@ -49,10 +49,9 @@ function CreatePost({ addPost, userId }) {
           credentials: 'masterknight:chickenNugget452!' // Replace with real credentials
         },
         body: JSON.stringify({
-          user_id: postData.author_id, // Pass user_id from database
           title: postData.title,
           body: postData.body,
-          thread_id: postData.thread_id,
+          user_id: postData.author_id, // Pass user_id from database
           images_url: postData.images_url || ''
         })
       });
@@ -92,8 +91,8 @@ function CreatePost({ addPost, userId }) {
 
           // Prepare data for the post
           const postData = {
-            user_id: userId,
             title: formData.title,
+            user_id: userId,
             content: formData.content,
             image_url: imageUrl
           };
