@@ -134,50 +134,80 @@ function Marketplace() {
         </Alert>
       )}
 
-      {!loading && !error && (
-        <Row xs={1} md={2} lg={3} className="g-4">
-          {filteredListings.map((listing) => (
-            <Col key={listing.id}>
-              <Card className="h-100 d-flex flex-column text-start">
-                <Card.Img
-                  variant="top"
-                  src={listing.images[0] || '/placeholder.jpg'} // Show the first image or a placeholder
-                  alt={listing.title}
-                  style={{ height: '200px', objectFit: 'cover' }}
-                />
-                <Card.Body className="d-flex flex-column">
-                  <Card.Title
-                    className="text-truncate"
-                    title={listing.title}
-                  >
-                    {listing.title}
-                  </Card.Title>
-                  <Card.Text
-                    className="text-truncate"
-                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                    title={listing.description} // Tooltip shows full text on hover
-                  >
-                    {listing.description}
-                  </Card.Text>
-                  <Card.Text><strong>Price:</strong> ${listing.price.toFixed(2)}</Card.Text>
-                  <Button
-                    variant="primary"
-                    onClick={() => handleViewDetails(listing)} // Open modal with details
-                    className="mt-auto"
-                  >
-                    View Details
-                  </Button>
-                </Card.Body>
-                <Card.Footer>
-                  <small className="text-muted">
-                    Posted on {new Date(listing.datePosted).toLocaleDateString()}
-                  </small>
-                </Card.Footer>
-              </Card>
-            </Col>
-          ))}
-        </Row>
+{!loading && !error && (
+        <>
+          {filteredListings.length > 0 ? (
+            <Row xs={1} md={2} lg={3} className="g-4">
+              {filteredListings.map((listing) => (
+                <Col key={listing.id}>
+                  <Card className="h-100 d-flex flex-column text-start">
+                    {listing.images[0] ? (
+                      <Card.Img
+                        variant="top"
+                        src={listing.images[0]}
+                        alt={listing.title}
+                        style={{
+                          height: '350px',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          height: '380px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#f0f0f0', 
+                          color: '#7a7a7a',
+                          fontSize: '16px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        No image provided for listing
+                      </div>
+                    )}
+                    <Card.Body className="d-flex flex-column">
+                      <Card.Title
+                        className="text-truncate"
+                        title={listing.title}
+                      >
+                        {listing.title}
+                      </Card.Title>
+                      <Card.Text
+                        className="text-truncate"
+                        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        title={listing.description}
+                      >
+                        {listing.description}
+                      </Card.Text>
+                      <Card.Text>
+                        <strong>Price:</strong> ${listing.price.toFixed(2)}
+                      </Card.Text>
+                      <Button
+                        variant="primary"
+                        className="mt-auto"
+                      >
+                        View Details
+                      </Button>
+                    </Card.Body>
+                    <Card.Footer>
+                      <small className="text-muted">
+                        Posted on {new Date(listing.datePosted).toLocaleDateString()}
+                      </small>
+                    </Card.Footer>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          ) : (
+            <div className="text-center mt-4">
+              <h5>No listings match your selected filters</h5>
+            </div>
+          )}
+        </>
       )}
+
 
       {/* Offcanvas for Filters */}
       <Offcanvas show={showOffcanvas} onHide={handleCloseOffcanvas} placement="start">
