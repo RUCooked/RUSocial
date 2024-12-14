@@ -5,13 +5,13 @@ import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import awsExports from './aws-exports';
 import { NavigationBar } from './components';
-import Marketplace from './pages/Marketplace'; 
-import MakeListing from './pages/makeListing'; 
-import Forum from './pages/Forum'; // Import Forum component
-import CreatePost from './pages/createPost'; // Import CreatePost component
-import Settings from './pages/Settings'; // Adjust path as needed
+import Home from './pages/Home';
+import Marketplace from './pages/Marketplace';
+import MakeListing from './pages/makeListing';
+import Forum from './pages/Forum';
+import CreatePost from './pages/createPost';
 import Login from './pages/Login';
-import Home from './pages/Settings';
+import Settings from './pages/Settings';
 
 Amplify.configure(awsExports);
 
@@ -29,6 +29,7 @@ function RequireAuth({ children }) {
   return user ? children : null;
 }
 
+// Main app layout component
 function AppLayout() {
   return (
     <div className="App">
@@ -37,31 +38,31 @@ function AppLayout() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/marketplace" element={<Marketplace />} />
-          <Route
-            path="/make-listing"
+          <Route 
+            path="/make-listing" 
             element={
               <RequireAuth>
                 <MakeListing />
               </RequireAuth>
-            }
+            } 
           />
           <Route path="/forum" element={<Forum />} />
-          <Route
-            path="/create-post"
+          <Route 
+            path="/create-post" 
             element={
               <RequireAuth>
                 <CreatePost />
               </RequireAuth>
-            }
+            } 
           />
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/settings"
+          <Route 
+            path="/settings" 
             element={
               <RequireAuth>
                 <Settings />
               </RequireAuth>
-            }
+            } 
           />
         </Routes>
       </main>
@@ -69,6 +70,7 @@ function AppLayout() {
   );
 }
 
+// Main App component
 function App() {
   return (
     <Authenticator.Provider>
