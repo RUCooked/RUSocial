@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import * as Amplify from 'aws-amplify';
+import { uploadImage } from '../utils/imageUpload';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 
@@ -12,43 +14,47 @@ function CreatePost({ addPost, userId }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const uploadImage = async (base64Image, fileName) => {
+  const fetchUserIdByEmail = async (email) => {
     try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/images', {
-        method: 'POST',
+      const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          base64Image,
-          fileName,
-        }),
+          'credentials': 'masterknight:chickenNugget452!' // Secure this later
+        }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image.');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch user information.');
       }
 
-      const result = await response.json();
-      console.log('Raw API Response:', result);
+      const data = await response.json();
+      if (data.length === 0) {
+        throw new Error('No user found with the provided email.');
+      }
 
-      const imageUrls = JSON.parse(result.body).imageUrls;
-      return imageUrls[0]; // Assuming single image upload
+      return data[0].user_id; // Assuming the API returns an array of users
     } catch (err) {
-      console.error(err);
-      throw new Error('Image upload failed.');
+      console.error('Error fetching user_id:', err);
+      throw err;
     }
   };
-
   const createPostData = async (postData) => {
     try {
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/dev/forum', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          credentials: 'username:password' // Replace with real credentials
+          credentials: 'masterknight:chickenNugget452!' // Replace with real credentials
         },
-        body: JSON.stringify(postData)
+        body: JSON.stringify({
+          user_id: postData.author_id, // Pass user_id from database
+          title: postData.title,
+          body: postData.body,
+          thread_id: postData.thread_id,
+          images_url: postData.images_url || ''
+        })
       });
 
       if (!response.ok) {
@@ -92,16 +98,11 @@ function CreatePost({ addPost, userId }) {
             image_url: imageUrl
           };
 
-          // Post the data
+          // // Post the data
           const newPost = await createPostData(postData);  // Changed from postData to createPostData
           console.log('Post created successfully:', newPost);
 
-          if (addPost) {
-            addPost(newPost);
-          }
-
-          // Navigate back to the forum
-          navigate('/forum');
+          // navigate('/forum');
         } catch (err) {
           setError(err.message);
         } finally {
