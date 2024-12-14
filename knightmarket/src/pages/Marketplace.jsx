@@ -3,6 +3,9 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, Modal, Image, Offcanvas, Form } from 'react-bootstrap';
 import { PlusCircle, PersonCircle, Funnel } from 'react-bootstrap-icons';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 function Marketplace() {
   const [listings, setListings] = useState([]);
@@ -12,8 +15,9 @@ function Marketplace() {
   const [showModal, setShowModal] = useState(false); // Controls modal visibility
   const [showOffcanvas, setShowOffcanvas] = useState(false); // Controls offcanvas visibility
   const [selectedListing, setSelectedListing] = useState(null); // Stores the selected listing details
+  const [startDate, setStartDate] = useState(null); // Start date for filtering
+  const [endDate, setEndDate] = useState(null);
 
-  // State for price range filters
   const [priceRange, setPriceRange] = useState({
     minPrice: '',
     maxPrice: ''
@@ -72,7 +76,6 @@ function Marketplace() {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
 
-    // Format price fields
     const numericValue = value.replace(/[^0-9.]/g, ''); // Strip everything except numbers and '.'
     const formattedValue = numericValue.match(/^\d*(\.\d{0,2})?$/) // Match up to 2 decimal places
       ? `$${numericValue}`
@@ -80,18 +83,27 @@ function Marketplace() {
 
     setPriceRange((prev) => ({
       ...prev,
-      [name]: formattedValue
+      [name]: formattedValue,
     }));
   };
 
   // Apply price range filters
   const applyFilters = () => {
-    const min = parseFloat(priceRange.minPrice.replace(/[^0-9.]/g, '')) || 0; // Parse the min price or default to 0
-    const max = parseFloat(priceRange.maxPrice.replace(/[^0-9.]/g, '')) || Infinity; // Parse the max price or default to Infinity
+    const minPrice = parseFloat(priceRange.minPrice.replace(/[^0-9.]/g, '')) || 0; // Parse the min price or default to 0
+    const maxPrice = parseFloat(priceRange.maxPrice.replace(/[^0-9.]/g, '')) || Infinity; // Parse the max price or default to Infinity
 
-    const filtered = listings.filter((listing) => listing.price >= min && listing.price <= max);
+    const filteredByPrice = listings.filter(
+      (listing) => listing.price >= minPrice && listing.price <= maxPrice
+    );
 
-    setFilteredListings(filtered); // Update the displayed listings with the filtered results
+    const filteredByDate = filteredByPrice.filter((listing) => {
+      const listingDate = new Date(listing.datePosted);
+      const isAfterStartDate = startDate ? listingDate >= startDate : true;
+      const isBeforeEndDate = endDate ? listingDate <= endDate : true;
+      return isAfterStartDate && isBeforeEndDate;
+    });
+
+    setFilteredListings(filteredByDate); // Update the displayed listings with the filtered results
     setShowOffcanvas(false); // Close the filters offcanvas
   };
 
@@ -210,7 +222,7 @@ function Marketplace() {
 
 
       {/* Offcanvas for Filters */}
-      <Offcanvas show={showOffcanvas} onHide={handleCloseOffcanvas} placement="start">
+      <Offcanvas show={showOffcanvas} onHide={() => setShowOffcanvas(false)} placement="start">
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>Filters</Offcanvas.Title>
         </Offcanvas.Header>
@@ -236,6 +248,28 @@ function Marketplace() {
                 placeholder="Enter maximum price"
               />
             </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Start Date</Form.Label>
+              <div>
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  placeholderText="Select start date"
+                  className="form-control mt-2"
+                />
+              </div>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>End Date</Form.Label>
+              <div>
+                <DatePicker
+                  selected={endDate}
+                  onChange={(date) => setEndDate(date)}
+                  placeholderText="Select end date"
+                  className="form-control mt-2"
+                />
+              </div>
+            </Form.Group>
             <Button variant="primary" className="w-100 mt-3" onClick={applyFilters}>
               Apply Filters
             </Button>
@@ -243,9 +277,11 @@ function Marketplace() {
               variant="secondary"
               className="w-100 mt-2"
               onClick={() => {
-                setPriceRange({ minPrice: '', maxPrice: '' }); // Reset price range
-                setFilteredListings(listings); // Reset filtered listings
-                setShowOffcanvas(false); // Close the offcanvas
+                setPriceRange({ minPrice: '', maxPrice: '' });
+                setStartDate(null);
+                setEndDate(null);
+                setFilteredListings(listings);
+                setShowOffcanvas(false);
               }}
             >
               Remove All Filters
