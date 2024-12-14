@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import * as Amplify from 'aws-amplify';
 import { uploadImage } from '../utils/imageUpload';
-import { getAuthToken } from '../utils/getJWT';
+import { getAuthHeaders } from '../utils/getJWT';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-const{ Auth } = Amplify;
+import { getCurrentUser } from '@aws-amplify/auth';
 
 function MakeListing({ addListing }) {
   const navigate = useNavigate();
@@ -17,41 +16,38 @@ function MakeListing({ addListing }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchUserIdByEmail = async (email) => {
-    try {
-      const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?email=${encodeURIComponent(email)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'credentials': 'masterknight:chickenNugget452!' // Secure this later
-        }
-      });
+  // const fetchUserIdByEmail = async (email) => {
+  //   const verifiedHeader = await getAuthHeaders();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch user information.');
-      }
+  //   try {
+  //     const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?email=${encodeURIComponent(email)}`, {
+  //       method: 'GET',
+  //       headers: verifiedHeader,
+  //     });
 
-      const data = await response.json();
-      if (data.length === 0) {
-        throw new Error('No user found with the provided email.');
-      }
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.message || 'Failed to fetch user information.');
+  //     }
 
-      return data[0].user_id; // Assuming the API returns an array of users
-    } catch (err) {
-      console.error('Error fetching user_id:', err);
-      throw err;
-    }
-  };
+  //     const data = await response.json();
+  //     if (data.length === 0) {
+  //       throw new Error('No user found with the provided email.');
+  //     }
+
+  //     return data[0].user_id; // Assuming the API returns an array of users
+  //   } catch (err) {
+  //     console.error('Error fetching user_id:', err);
+  //     throw err;
+  //   }
+  // };
 
   const postListing = async (listingData) => {
+    const verifiedHeader = await getAuthHeaders();
     try {
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'credentials': 'masterknight:chickenNugget452!' // Secure this later
-        },
+        headers: verifiedHeader,
         body: JSON.stringify({
           user_id: listingData.user_id, // Pass user_id from database
           title: listingData.title,
@@ -83,12 +79,9 @@ function MakeListing({ addListing }) {
         throw new Error('Please upload an image.');
       }
 
-      // Get the current authenticated user's email
-      const user = await Auth.currentAuthenticatedUser();
-      const email = user.attributes.email; // Fetch email from Cognito user
-
-      // Fetch user_id using the email
-      const userId = await fetchUserIdByEmail(email);
+      const { userId } = await getCurrentUser();
+      // const email = user.attributes.email; // Fetch email from Cognito user
+      // const userId = await fetchUserIdByEmail(email);
 
       // Convert image to Base64
       const reader = new FileReader();
@@ -102,7 +95,7 @@ function MakeListing({ addListing }) {
 
           // Prepare data for the listing
           const listingData = {
-            user_id: userId, // Include user_id
+            user_id: userId, 
             title: formData.title,
             product_description: formData.description,
             product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),

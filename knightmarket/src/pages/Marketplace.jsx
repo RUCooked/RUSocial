@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, Modal, Image } from 'react-bootstrap';
 import { PlusCircle, PersonCircle} from 'react-bootstrap-icons';
+import { getAuthHeaders } from '../utils/getJWT';
 
 function Marketplace() {
   const [listings, setListings] = useState([]);
@@ -12,12 +13,10 @@ function Marketplace() {
   const [selectedListing, setSelectedListing] = useState(null); // Stores the selected listing details
 
   const fetchListings = async () => {
+    const verifiedHeader = await getAuthHeaders();
     try {
       const response = await axios.get('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
-        headers: {
-          'Content-Type': 'application/json',
-          'credentials': `masterknight:chickenNugget452!` // Replace with secure credentials management
-        }
+        headers: verifiedHeader,
       });
 
       const parsedBody = JSON.parse(response.data.body);
