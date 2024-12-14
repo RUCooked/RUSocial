@@ -1,33 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Card, Button, Badge } from 'react-bootstrap';
 import { PlusCircle, ChatLeftText } from 'react-bootstrap-icons';
 
 function Forum() {
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      title: 'Welcome to the Forum!',
-      content: 'Feel free to share anything related to KnightMarket here.',
-      author: 'Admin',
-      date: '2024-03-15',
-      comments: 5
-    },
-    {
-      id: 2,
-      title: 'Announcement',
-      content: 'We have updated our marketplace with new features.',
-      author: 'Moderator',
-      date: '2024-03-14',
-      comments: 3
-    }
-  ]);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const isAuthorized = true; // Mock authorization check
+  console.log("mock auth because its not implemented yet go bother haider about this")
+  // Fetch posts from API
+  useEffect(() => {
+    const fetchPosts = async () => {
+     console.log("trying to fetch")
+      try {
+        const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/no-auth/forum/', {
+          method: 'GET',
+          headers: {
+            'credentials': 'masterknight:chickenNugget452!',
+            'Content-Type': 'application/json',
+          },
+        });
 
-  const createPost = (newPost) => {
-    setPosts([...posts, { ...newPost, id: posts.length + 1 }]);
-  };
+        if (!response.ok) {
+          console.log("response was NOT ok")
+          throw new Error(response);
+        }
+
+        const data = await response.json();
+        setPosts(data.posts || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   return (
     <Container className="py-4">
@@ -50,38 +61,47 @@ function Forum() {
         )}
       </div>
 
+      {/* Loading and Error States */}
+      {loading && <p>Loading posts...</p>}
+      {error && <p className="text-danger">{error}</p>}
+
       {/* Posts Section */}
-      <div className="d-flex flex-column gap-3">
-        {posts.map(post => (
-          <Card key={post.id} className="shadow-sm">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <Card.Title className="mb-1">{post.title}</Card.Title>
-                  <div className="text-muted small">
-                    Posted by {post.author} on {new Date(post.date).toLocaleDateString()}
+      {!loading && !error && posts.length > 0 ? (
+        <div className="d-flex flex-column gap-3">
+          {posts.map(post => (
+            <Card key={post.id} className="shadow-sm">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <Card.Title className="mb-1">{post.title}</Card.Title>
+                    <div className="text-muted small">
+                      Posted by {post.author?.username || 'Unknown'} on{' '}
+                      {new Date(post.created_at).toLocaleDateString()}
+                    </div>
                   </div>
+                  <Badge bg="secondary" className="d-flex align-items-center gap-1">
+                    <ChatLeftText size={14} />
+                    {post.comments?.comments || 'No Comments'}
+                  </Badge>
                 </div>
-                <Badge bg="secondary" className="d-flex align-items-center gap-1">
-                  <ChatLeftText size={14} />
-                  {post.comments}
-                </Badge>
-              </div>
-              <Card.Text>{post.content}</Card.Text>
-              <div className="d-flex justify-content-end">
-                <Button 
-                  variant="outline-primary" 
-                  as={Link} 
-                  to={`/post/${post.id}`}
-                  size="sm"
-                >
-                  Read More
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        ))}
-      </div>
+                <Card.Text>{post.body}</Card.Text>
+                <div className="d-flex justify-content-end">
+                  <Button 
+                    variant="outline-primary" 
+                    as={Link} 
+                    to={`/post/${post.id}`}
+                    size="sm"
+                  >
+                    Read More
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        !loading && <p>No posts available.</p>
+      )}
     </Container>
   );
 }
