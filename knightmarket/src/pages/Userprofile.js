@@ -16,7 +16,7 @@ import {
 import {
   PersonFill,
   EnvelopeFill,
-  PeopleFill,
+  TrashFill,
   ShieldFill,
   Shop,
   ChatSquareText,
@@ -169,6 +169,75 @@ const UserProfile = () => {
 
     } catch (error) {
       console.error('Error updating bio:', error);
+    }
+  };
+
+  // Add these functions to your UserProfile component
+  const handleMarketplaceDelete = async (postId) => {
+    try {
+      // Get authentication headers
+      const verifiedHeader = await getAuthHeaders();
+
+      // Make delete request to marketplace API
+      const response = await fetch(`${API_ENDPOINTS.MARKETPLACE}`, {
+        method: 'DELETE',
+        headers: verifiedHeader,
+        body: JSON.stringify({
+          postsId: postId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete marketplace post');
+      }
+
+      // If deletion was successful, update the local state
+      // We'll filter out the deleted post from our current data
+      setProfileData(prevData => ({
+        ...prevData,
+        stats: {
+          ...prevData.stats,
+          marketplaceData: prevData.stats.marketplaceData.filter(post => post.postsId !== postId),
+          marketplacePosts: prevData.stats.marketplacePosts - 1,
+          posts: prevData.stats.posts - 1
+        }
+      }));
+
+    } catch (error) {
+      console.error('Error deleting marketplace post:', error);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  const handleForumDelete = async (postId) => {
+    try {
+      const verifiedHeader = await getAuthHeaders();
+
+      const response = await fetch(`${API_ENDPOINTS.FORUM}`, {
+        method: 'DELETE',
+        headers: verifiedHeader,
+        body: JSON.stringify({
+          id: postId,
+          author_id: currentUser.userId,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete forum post');
+      }
+
+      setProfileData(prevData => ({
+        ...prevData,
+        stats: {
+          ...prevData.stats,
+          forumData: prevData.stats.forumData.filter(post => post.postsId !== postId),
+          forumPosts: prevData.stats.forumPosts - 1,
+          posts: prevData.stats.posts - 1
+        }
+      }));
+
+    } catch (error) {
+      console.error('Error deleting forum post:', error);
     }
   };
 
@@ -457,17 +526,32 @@ const UserProfile = () => {
                       <ListGroup.Item
                         key={post.postsId}
                         className="d-flex justify-content-between align-items-center"
-                        action
-                        onClick={() => navigate(`/marketplace`)}
                       >
-                        <div>
+                        <div
+                          className="flex-grow-1 cursor-pointer"
+                          onClick={() => navigate(`/marketplace/listing/${post.postsId}`)}
+                        >
                           <h6 className="mb-0">{post.title}</h6>
                           <small className="text-muted">
                             Posted: {new Date(post.date_posted).toLocaleDateString()}
                           </small>
                         </div>
-                        <div>
+                        <div className="d-flex align-items-center gap-2">
                           <Badge bg="success">${parseFloat(post.product_price).toFixed(2)}</Badge>
+                          {isOwnProfile && (
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent navigation when clicking delete
+                                if (window.confirm('Are you sure you want to delete this listing?')) {
+                                  handleMarketplaceDelete(post.postsId);
+                                }
+                              }}
+                            >
+                              <TrashFill size={14} />
+                            </Button>
+                          )}
                         </div>
                       </ListGroup.Item>
                     ))
@@ -493,10 +577,11 @@ const UserProfile = () => {
                       <ListGroup.Item
                         key={post.postsId}
                         className="d-flex justify-content-between align-items-center"
-                        action
-                        onClick={() => navigate(`/forum`)}
                       >
-                        <div>
+                        <div
+                          className="flex-grow-1 cursor-pointer"
+                          onClick={() => navigate(`/forum/post/${post.postsId}`)}
+                        >
                           <h6 className="mb-0">{post.title}</h6>
                           <small className="text-muted">
                             Posted: {new Date(post.date_posted).toLocaleDateString()}
@@ -504,6 +589,20 @@ const UserProfile = () => {
                         </div>
                         <div className="d-flex align-items-center gap-2">
                           <Badge bg="primary">{post.replies || 0} replies</Badge>
+                          {isOwnProfile && (
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent navigation when clicking delete
+                                if (window.confirm('Are you sure you want to delete this post?')) {
+                                  handleForumDelete(post.postsId);
+                                }
+                              }}
+                            >
+                              <TrashFill size={14} />
+                            </Button>
+                          )}
                         </div>
                       </ListGroup.Item>
                     ))
