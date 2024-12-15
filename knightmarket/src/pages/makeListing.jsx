@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import * as Amplify from 'aws-amplify';
 import { uploadImage } from '../utils/imageUpload';
+import { getAuthHeaders } from '../utils/getJWT';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-const{ Auth } = Amplify;
+import { fetchUserAttributes, getCurrentUser } from '@aws-amplify/auth';
 
 function MakeListing({ addListing }) {
   const navigate = useNavigate();
@@ -16,41 +16,12 @@ function MakeListing({ addListing }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchUserIdByEmail = async (email) => {
-    try {
-      const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?email=${encodeURIComponent(email)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'credentials': 'masterknight:chickenNugget452!' // Secure this later
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch user information.');
-      }
-
-      const data = await response.json();
-      if (data.length === 0) {
-        throw new Error('No user found with the provided email.');
-      }
-
-      return data[0].user_id; // Assuming the API returns an array of users
-    } catch (err) {
-      console.error('Error fetching user_id:', err);
-      throw err;
-    }
-  };
-
   const postListing = async (listingData) => {
+    const verifiedHeader = await getAuthHeaders();
     try {
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'credentials': 'masterknight:chickenNugget452!' // Secure this later
-        },
+        headers: verifiedHeader,
         body: JSON.stringify({
           user_id: listingData.user_id, // Pass user_id from database
           title: listingData.title,
@@ -82,12 +53,7 @@ function MakeListing({ addListing }) {
         throw new Error('Please upload an image.');
       }
 
-      // Get the current authenticated user's email
-      const user = await Auth.currentAuthenticatedUser();
-      const email = user.attributes.email; // Fetch email from Cognito user
-
-      // Fetch user_id using the email
-      const userId = await fetchUserIdByEmail(email);
+      const userAttributes = await fetchUserAttributes();
 
       // Convert image to Base64
       const reader = new FileReader();
@@ -101,7 +67,7 @@ function MakeListing({ addListing }) {
 
           // Prepare data for the listing
           const listingData = {
-            user_id: userId, // Include user_id
+            user_id: userAttributes.sub, 
             title: formData.title,
             product_description: formData.description,
             product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
@@ -136,19 +102,21 @@ function MakeListing({ addListing }) {
     const { name, value } = e.target;
 
     if (name === 'price') {
-      const numericValue = value.replace(/[^0-9]/g, '');
-      const formattedValue = numericValue
-        ? `$${Number(numericValue).toLocaleString('en-US')}`
-        : '';
-      setFormData((prev) => ({
-        ...prev,
-        [name]: formattedValue
-      }));
+        // Allow only numbers and a single decimal point
+        const numericValue = value.replace(/[^0-9.]/g, ''); // Strip everything except numbers and '.'
+        const formattedValue = numericValue.match(/^\d*(\.\d{0,2})?$/) // Match up to 2 decimal places
+            ? `$${numericValue}`
+            : formData.price; // Keep the previous valid value if invalid input
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: formattedValue
+        }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value
-      }));
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
     }
   };
 
