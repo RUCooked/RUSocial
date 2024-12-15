@@ -8,7 +8,7 @@ function CreatePost({ addPost, userId }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
-    content: ''
+    body: ''
   });
   const [image, setImage] = useState(null);
   const [error, setError] = useState(null);
