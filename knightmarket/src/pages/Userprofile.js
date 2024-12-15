@@ -36,4 +36,4 @@ const Userprofile = () => {
   );
 };
 
-export default Profile;
+export default Userprofile;
