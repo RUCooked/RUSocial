@@ -10,7 +10,7 @@ function CreatePost({ addPost }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
-    body: ''
+    content: ''
   });
   const [image, setImage] = useState(null);
   const [error, setError] = useState(null);
@@ -23,11 +23,11 @@ function CreatePost({ addPost }) {
 
     try{
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum',{
-        httpMethod: 'POST',
-        headers: {verifiedHeader},
+        method: 'POST',
+        headers: verifiedHeader,
         body: JSON.stringify({
           title: postingData.title,
-          body: postingData.body,
+          body: postingData.content,
           author_id: postingData.author_id,
           image_url: postingData.image_url || ''
         })
@@ -69,7 +69,7 @@ function CreatePost({ addPost }) {
           // Prepare data for the listing
           const postingData = {
             title: formData.title,
-            body: formData.body,
+            content: formData.content,
             author_id: userAttributes.sub, 
             image_url: imageUrl
           };
@@ -136,6 +136,7 @@ function CreatePost({ addPost }) {
                 as="textarea"
                 rows={6}
                 name="content"
+                value={formData.content}
                 onChange={handleChange}
                 required
                 placeholder="Write your post content here..."
