@@ -1,4 +1,5 @@
 import React from 'react';
+import rutgersKnight from '../assets/rutgersKnight.png';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Shop, ChatSquareText, Search, ArrowRight, Star } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
@@ -39,9 +40,9 @@ const Home = () => {
             </Col>
             <Col md={6}>
               <img 
-                src="/api/placeholder/600/400"
-                alt="KnightMarket Preview"
-                className="img-fluid rounded shadow"
+                src={rutgersKnight} 
+                alt="KnightMarket Hero" 
+                className="img-fluid rounded shadow" 
               />
             </Col>
           </Row>
