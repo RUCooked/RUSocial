@@ -38,31 +38,31 @@ function AppLayout() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/marketplace" element={<Marketplace />} />
-          <Route 
-            path="/make-listing" 
+          <Route
+            path="/make-listing"
             element={
               <RequireAuth>
                 <MakeListing />
               </RequireAuth>
-            } 
+            }
           />
           <Route path="/forum" element={<Forum />} />
-          <Route 
-            path="/create-post" 
+          <Route
+            path="/create-post"
             element={
               <RequireAuth>
                 <CreatePost />
               </RequireAuth>
-            } 
+            }
           />
           <Route path="/login" element={<Login />} />
-          <Route 
-            path="/settings" 
+          <Route
+            path="/settings"
             element={
               <RequireAuth>
                 <Settings />
               </RequireAuth>
-            } 
+            }
           />
         </Routes>
       </main>
