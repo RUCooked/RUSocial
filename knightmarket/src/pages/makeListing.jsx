@@ -4,6 +4,7 @@ import { getAuthHeaders } from '../utils/getJWT';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 import { fetchUserAttributes, getCurrentUser } from '@aws-amplify/auth';
+import { API_ENDPOINTS } from '../config/apis';
 
 function MakeListing({ addListing }) {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ function MakeListing({ addListing }) {
   const postListing = async (listingData) => {
     const verifiedHeader = await getAuthHeaders();
     try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
+      const response = await fetch(API_ENDPOINTS.MARKETPLACE_POSTS, {
         method: 'POST',
         headers: verifiedHeader,
         body: JSON.stringify({

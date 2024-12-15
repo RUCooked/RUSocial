@@ -6,7 +6,7 @@ import { PlusCircle, PersonCircle, Funnel } from 'react-bootstrap-icons';
 import { getAuthHeaders } from '../utils/getJWT';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
+import { API_ENDPOINTS } from '../config/apis';
 
 function Marketplace() {
   const [listings, setListings] = useState([]);
@@ -28,7 +28,7 @@ function Marketplace() {
   // Fetch Listings
   const fetchListings = async () => {
     try {
-      const response = await axios.get('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
+      const response = await axios.get(API_ENDPOINTS.MARKETPLACE_GET, {
         headers: {
           'Content-Type': 'application/json',
         }
