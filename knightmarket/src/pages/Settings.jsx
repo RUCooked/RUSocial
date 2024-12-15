@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Form, Button, Card, ListGroup, Image } from 'react-bootstrap';
+import { Container, Form, Button, Card, ListGroup, Image, Spinner, Alert } from 'react-bootstrap';
 import {
   PersonFill,
   LockFill,
@@ -10,24 +10,46 @@ import {
   ShieldFill,
   PersonXFill,
   ArrowLeftShort,
-  SaveFill,
-  PencilFill,
 } from 'react-bootstrap-icons';
+import { getCurrentUser, fetchUserAttributes } from '@aws-amplify/auth';
 
 function Settings() {
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState('CurrentUsername');
-  const [displayName, setDisplayName] = useState('Current Display Name');
+  const [username, setUsername] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
-  const [email, setEmail] = useState('user@rutgers.edu');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactorAuth, setTwoFactorAuth] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Edit mode states
-  const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [isEditingDisplayName, setIsEditingDisplayName] = useState(false);
+  // Fetch current user data
+  const fetchCurrentUser = async () => {
+    try {
+      // Fetch username from getCurrentUser
+      const user = await getCurrentUser();
+      console.log('Current User:', user);
+
+      // Fetch email and other attributes from fetchUserAttributes
+      const attributes = await fetchUserAttributes();
+      console.log('User Attributes:', attributes);
+
+      // Update state with fetched data
+      setUsername(user.username || 'Unknown User');
+      setEmail(attributes.email || 'No email available');
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+      setError('Failed to load user data. Please try again later.');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -44,6 +66,26 @@ function Settings() {
   const handleUnblockUser = (username) => {
     setBlockedUsers(blockedUsers.filter((user) => user !== username));
   };
+
+  if (loading) {
+    return (
+      <Container className="py-4">
+        <div className="d-flex justify-content-center">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="py-4">
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container className="py-4">
@@ -72,73 +114,12 @@ function Settings() {
         <Card.Body>
           <Form>
             {/* Username */}
-<Form.Group className="mb-3">
-  <Form.Label className="d-flex align-items-center">
-    <PersonFill className="text-danger me-2" /> Username
-  </Form.Label>
-  {isEditingUsername ? (
-    <div className="d-flex gap-2">
-      <Form.Control
-        type="text"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <Button
-        variant="success"
-        className="d-flex align-items-center"
-        onClick={() => setIsEditingUsername(false)}
-      >
-        <SaveFill /> Save
-      </Button>
-    </div>
-  ) : (
-    <div className="d-flex justify-content-between align-items-center">
-      <span>{username}</span>
-      <Button
-        variant="danger" // Changed to red
-        size="sm"
-        onClick={() => setIsEditingUsername(true)}
-        className="d-flex align-items-center gap-1"
-      >
-        <PencilFill /> Edit
-      </Button>
-    </div>
-  )}
-</Form.Group>
-            {/* Display Name */}
-<Form.Group className="mb-3">
-  <Form.Label className="d-flex align-items-center">
-    <PersonFill className="text-danger me-2" /> Display Name
-  </Form.Label>
-  {isEditingDisplayName ? (
-    <div className="d-flex gap-2">
-      <Form.Control
-        type="text"
-        value={displayName}
-        onChange={(e) => setDisplayName(e.target.value)}
-      />
-      <Button
-        variant="success"
-        className="d-flex align-items-center"
-        onClick={() => setIsEditingDisplayName(false)}
-      >
-        <SaveFill /> Save
-      </Button>
-    </div>
-  ) : (
-    <div className="d-flex justify-content-between align-items-center">
-      <span>{displayName}</span>
-      <Button
-        variant="danger" // Changed to red
-        size="sm"
-        onClick={() => setIsEditingDisplayName(true)}
-        className="d-flex align-items-center gap-1"
-      >
-        <PencilFill /> Edit
-      </Button>
-    </div>
-  )}
-</Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center">
+                <PersonFill className="text-danger me-2" /> Username
+              </Form.Label>
+              <Form.Control type="text" value={username} readOnly className="bg-light" />
+            </Form.Group>
 
             {/* Profile Picture */}
             <Form.Group className="mb-3">
@@ -174,41 +155,6 @@ function Settings() {
                 Email cannot be changed as it is linked to your Rutgers account.
               </Form.Text>
             </Form.Group>
-          </Form>
-        </Card.Body>
-      </Card>
-
-      {/* Security Section */}
-      <Card className="mb-4 shadow-sm">
-        <Card.Header className="bg-white">
-          <h2 className="h5 mb-0 d-flex align-items-center text-danger">
-            <LockFill className="me-2" /> Security & Access
-          </h2>
-        </Card.Header>
-        <Card.Body>
-          <Form>
-            {/* Password */}
-            <Form.Group className="mb-3">
-              <Form.Label className="d-flex align-items-center">
-                <LockFill className="text-danger me-2" /> Change Password
-              </Form.Label>
-              <Form.Control
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter new password"
-              />
-            </Form.Group>
-
-            {/* Two-Factor Authentication */}
-            <Form.Check
-              type="checkbox"
-              id="two-factor-auth"
-              label="Enable Two-Factor Authentication"
-              checked={twoFactorAuth}
-              onChange={() => setTwoFactorAuth(!twoFactorAuth)}
-              className="mb-3 d-flex align-items-center gap-2"
-            />
           </Form>
         </Card.Body>
       </Card>
