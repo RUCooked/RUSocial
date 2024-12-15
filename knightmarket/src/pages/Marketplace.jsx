@@ -16,6 +16,7 @@ function Marketplace() {
   const [showModal, setShowModal] = useState(false); // Controls modal visibility
   const [showOffcanvas, setShowOffcanvas] = useState(false); // Controls offcanvas visibility
   const [selectedListing, setSelectedListing] = useState(null); // Stores the selected listing details
+  const [userDetails, setUserDetails] = useState(null); 
   const [startDate, setStartDate] = useState(null); // Start date for filtering
   const [endDate, setEndDate] = useState(null);
 
@@ -37,6 +38,7 @@ function Marketplace() {
 
       const apiListings = parsedBody.map(post => ({
         id: post.postsId,
+        user: post.user_id,
         title: post.title,
         description: post.product_description,
         images: post.images_url || [],
@@ -59,14 +61,48 @@ function Marketplace() {
     fetchListings();
   }, []);
 
-  const handleViewDetails = (listing) => {
-    setSelectedListing(listing); // Set the selected listing
-    setShowModal(true); // Show the modal
-  };
+  const handleViewDetails = async (listing) => {
+    try {
+        setSelectedListing(listing);
+        setShowModal(true);
+
+        console.log('Fetching user details for user_id:', listing.user);
+
+        // Fetch user details using the user's ID
+        const userResponse = await axios.get(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?id=${listing.user}`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const parsedUser = JSON.parse(userResponse.data.body);
+        console.log('Parsed User:', parsedUser);
+
+        // Check if users array exists and has entries
+        if (parsedUser.users && Array.isArray(parsedUser.users) && parsedUser.users.length > 0) {
+            const userInfo = parsedUser.users.map(user => ({
+                userid: user.id,
+                username: user.username,
+                email: user.email,
+                image_url: user.image_url,
+            }));
+            console.log('Formatted User Info:', userInfo);
+
+            setUserDetails(userInfo[0]); // Use the first user from the array
+        } else {
+            console.warn('Users array is not present or is empty');
+            setUserDetails(null); // Reset user details if no valid data is returned
+        }
+    } catch (err) {
+        console.error('Error fetching user details:', err);
+        setUserDetails(null); // Reset user details on error
+    }
+};
 
   const handleCloseModal = () => {
-    setShowModal(false); // Hide the modal
-    setSelectedListing(null); // Clear the selected listing
+    setShowModal(false);
+    setSelectedListing(null);
+    setUserDetails(null); // Clear user details when modal is closed
   };
 
   const handleShowOffcanvas = () => setShowOffcanvas(true);
@@ -188,7 +224,11 @@ function Marketplace() {
                       </Card.Title>
                       <Card.Text
                         className="text-truncate"
-                        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
                         title={listing.description}
                       >
                         {listing.description}
@@ -206,7 +246,8 @@ function Marketplace() {
                     </Card.Body>
                     <Card.Footer>
                       <small className="text-muted">
-                        Posted on {new Date(listing.datePosted).toLocaleDateString()}
+                        Posted on{' '}
+                        {new Date(listing.datePosted).toLocaleDateString()}
                       </small>
                     </Card.Footer>
                   </Card>
@@ -221,44 +262,74 @@ function Marketplace() {
         </>
       )}
 
+
       {/* Modal for Detailed View */}
       <Modal
         show={showModal}
         onHide={handleCloseModal}
         centered
-        size="lg" // Makes the modal wider
+        size="lg"
         fullscreen="md-down"
       >
         <Modal.Header closeButton>
           <Modal.Title>{selectedListing?.title}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {selectedListing && (
-            <>
-              <Image
-                src={selectedListing.images[0] || '/placeholder.jpg'}
-                alt={selectedListing.title}
-                className="mb-3"
-                style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
-                rounded
-              />
-              <h5 className="text-muted">Description</h5>
-              <p>{selectedListing.description}</p>
-              <h5 className="text-muted">Price</h5>
-              <p>${selectedListing.price}</p>
-              <div className="d-flex align-items-center mb-3">
-                <PersonCircle
-                  size={50} // Set the size to match the original profile picture size
-                  className="me-2" // Add some margin to the right for spacing
-                  style={{ color: '#6c757d' }} // Optional: Adjust color to match your design
-                />
-                <div>
-                  <p className="mb-0"><strong>User Name</strong></p> {/* Placeholder for user name */}
-                  <Button variant="primary" size="sm">Message User</Button>
-                </div>
-              </div>
-            </>
-          )}
+          <Modal.Body>
+            {selectedListing && (
+                <>
+                    <Image
+                        src={
+                            userDetails?.image_url ||
+                            selectedListing.images[0] ||
+                            '/placeholder.jpg'
+                        }
+                        alt={selectedListing.title}
+                        className="mb-3"
+                        style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
+                        rounded
+                    />
+                    <h5 className="text-muted">Description</h5>
+                    <p>{selectedListing.description}</p>
+                    <h5 className="text-muted">Price</h5>
+                    <p>${selectedListing.price}</p>
+                    <div className="d-flex align-items-center mb-3 border-top pt-3">
+                        {userDetails ? (
+                          <div className="d-flex align-items-center justify-content-between w-100">
+                            <div className="d-flex align-items-center">
+                                {userDetails.image_url ? (
+                                    <Image
+                                        src={userDetails.image_url}
+                                        alt={userDetails.username}
+                                        roundedCircle
+                                        style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                        className="me-3"
+                                    />
+                                ) : (
+                                    <PersonCircle
+                                        size={50}
+                                        className="me-3 text-muted"
+                                        style={{ width: '50px', height: '50px' }}
+                                    />
+                                )}
+                                <div>
+                                    <p className="mb-1">
+                                        <strong>{userDetails.username}</strong>
+                                    </p>
+                                    <p className="mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+                                        {userDetails.email}
+                                    </p>
+                                </div>
+                            </div>
+                            <Button variant="primary" size="md" className="ms-auto">
+                                Message User
+                            </Button>
+                          </div>
+                        ) : (
+                            <p>Loading user details...</p>
+                        )}
+                    </div>
+                </>
+            )}
         </Modal.Body>
       </Modal>
 
