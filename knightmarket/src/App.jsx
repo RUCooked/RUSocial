@@ -11,7 +11,10 @@ import MakeListing from './pages/makeListing';
 import Forum from './pages/Forum';
 import CreatePost from './pages/createPost';
 import Login from './pages/Login';
+import Userprofile from "./pages/Userprofile";
+import './App.css';
 import Settings from './pages/Settings';
+import './App.css';
 
 Amplify.configure(awsExports);
 
@@ -61,6 +64,14 @@ function AppLayout() {
             element={
               <RequireAuth>
                 <Settings />
+              </RequireAuth>
+            }
+          />
+        <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <Userprofile />
               </RequireAuth>
             }
           />
