@@ -10,7 +10,7 @@ function CreatePost({ addPost }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
-    content: ''
+    body: ''
   });
   const [image, setImage] = useState(null);
   const [error, setError] = useState(null);
@@ -65,21 +65,20 @@ function CreatePost({ addPost }) {
           const postingData = {
             user_id: userAttributes.sub, 
             title: formData.title,
-            product_description: formData.description,
-            product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
+            body: formData.body,
             images_url: imageUrl
           };
 
           // Post the listing
-          const newListing = await postListing(postingData);
+          const newListing = await createPost(postingData);
           console.log('Listing created successfully:', newListing);
 
-          if (addListing) {
-            addListing(newListing);
+          if (addPost) {
+            addPost(newListing);
           }
 
-          // Navigate back to the marketplace
-          navigate('/marketplace');
+          // Navigate back to the forum
+          navigate('/forum');
         } catch (err) {
           setError(err.message);
         } finally {
@@ -110,8 +109,6 @@ function CreatePost({ addPost }) {
               <Form.Control
                 type="text"
                 name="title"
-                value={formData.title}
-                onChange={handleChange}
                 required
                 placeholder="Enter post title"
               />
@@ -123,8 +120,6 @@ function CreatePost({ addPost }) {
                 as="textarea"
                 rows={6}
                 name="content"
-                value={formData.content}
-                onChange={handleChange}
                 required
                 placeholder="Write your post content here..."
               />
