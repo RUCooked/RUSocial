@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { uploadImage } from '../utils/imageUpload';
+import { getAuthHeaders } from '../utils/getJWT';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 import { fetchUserAttributes, getCurrentUser } from '@aws-amplify/auth';
@@ -72,7 +73,7 @@ function CreatePost({ addPost, userId }) {
           };
 
           // // Post the data
-          const newPost = await createPostData(listingDataData);  // Changed from postData to createPostData
+          const newPost = await createPostData(listingData);  // Changed from postData to createPostData
           console.log('Post created successfully:', newPost);
 
           // navigate('/forum');
