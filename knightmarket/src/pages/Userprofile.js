@@ -1,41 +1,83 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Container, 
-  Row, 
-  Col, 
-  Card, 
-  Button, 
-  Badge, 
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Badge,
   Accordion,
-  Image, 
+  Form,
+  Image,
   ListGroup,
-  Spinner 
+  Spinner
 } from 'react-bootstrap';
-import { 
-  PersonFill, 
-  EnvelopeFill, 
-  PeopleFill, 
+import {
+  PersonFill,
+  EnvelopeFill,
+  PeopleFill,
   ShieldFill,
   Shop,
   ChatSquareText,
-  PencilSquare 
+  PencilSquare
 } from 'react-bootstrap-icons';
 import { getCurrentUser } from '@aws-amplify/auth';
+import { getAuthHeaders } from '../utils/getJWT';
 import { API_ENDPOINTS } from '../config/apis';
+
+// New component for editable bio
+const EditableBio = ({ bio, onSave }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [newBio, setNewBio] = useState(bio);
+
+  const handleSave = async () => {
+    await onSave(newBio);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="mb-3">
+        <Form.Control
+          as="textarea"
+          value={newBio}
+          onChange={(e) => setNewBio(e.target.value)}
+          placeholder="Tell us about yourself..."
+          rows={3}
+        />
+        <div className="mt-2">
+          <Button variant="danger" size="sm" onClick={handleSave} className="me-2">
+            Save
+          </Button>
+          <Button variant="outline-secondary" size="sm" onClick={() => setIsEditing(false)}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <p className="mb-3" onClick={() => setIsEditing(true)} style={{ cursor: 'pointer' }}>
+      {bio || 'Click to add bio...'}
+      <PencilSquare size={12} className="ms-2 text-muted" />
+    </p>
+  );
+};
 
 const UserProfile = () => {
   // Get userId from URL parameters for viewing other profiles
   const { userId: profileId } = useParams();
   const navigate = useNavigate();
-  
+
   // State management for all profile data and UI states
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  
+
   // Mock data for marketplace posts - replace with API data later
   const marketplacePosts = [
     { id: 1, title: "Calculus Textbook", price: "$45", date: "2024-03-15" },
@@ -54,32 +96,32 @@ const UserProfile = () => {
       try {
         setIsLoading(true);
         setError(null);
-  
+
         // Get current user info
         const loggedInUser = await getCurrentUser();
         setCurrentUser(loggedInUser);
-  
+
         // Determine which profile to load
         const targetUserId = profileId || loggedInUser.userId;
         setIsOwnProfile(!profileId || profileId === loggedInUser.userId);
-  
+
         // Fetch profile data
         const response = await fetch(`${API_ENDPOINTS.USERS}?id=${targetUserId}`, {
           headers: {
             'Content-Type': 'application/json',
           }
         });
-  
+
         if (!response.ok) {
           throw new Error('Failed to fetch profile data');
         }
-  
+
         const rawData = await response.json();
         // Parse the body string into an object
         const parsedData = JSON.parse(rawData.body);
         // Now we can access the users array
         const userData = parsedData.users[0];
-  
+
         // Transform the data to match our component's expected structure
         const transformedData = {
           username: userData.username,
@@ -89,15 +131,15 @@ const UserProfile = () => {
           userId: userData.id,
           createdAt: userData.created_at,
           stats: {
-            posts: 0,
             followers: userData.followers || 0,
             following: userData.following || 0,
             marketplacePosts: 0,
             forumPosts: 0,
-            blockedUsers: 0
+            blockedUsers: 0,
+            posts: Number(forumPosts + marketplacePosts),
           }
         };
-  
+
         setProfileData(transformedData);
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -106,21 +148,50 @@ const UserProfile = () => {
         setIsLoading(false);
       }
     };
-  
+
     loadProfileData();
   }, [profileId]);
 
+  const updateBio = async (newBio) => {
+
+    const verifiedHeader = await getAuthHeaders();
+    try {
+
+      const response = await fetch(`${API_ENDPOINTS.USERS}`, {
+        method: 'PUT',
+        headers: verifiedHeader,
+        body: JSON.stringify({
+          id: currentUser.usedrId,
+          bio: newBio
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update bio');
+      }
+
+      // Update local state
+      setProfileData(prev => ({
+        ...prev,
+        bio: newBio
+      }));
+
+    } catch (error) {
+      console.error('Error updating bio:', error);
+      // You might want to show an error message to the user
+    }
+  };
+
   // Handler for following/unfollowing users
   const handleFollow = async (targetUserId) => {
+    const verifiedHeader = await getAuthHeaders();
     try {
-      const response = await fetch(`${API_ENDPOINTS.USERS}/follow`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(`${API_ENDPOINTS.USERS}`, {
+        method: 'PUT',
+        headers: verifiedHeader,
         body: JSON.stringify({
-          followerId: currentUser.userId,
-          followingId: targetUserId
+          id: currentUser.userId,
+          follower_id: targetUserId
         })
       });
 
@@ -138,10 +209,20 @@ const UserProfile = () => {
     }
   };
 
-  // Handler for initiating messages with users
+
+
+
+
+
+
+  // TODO: IMPLEMENT ACTUAL MESSAGES PAGE 
   const handleMessage = (targetUserId) => {
     navigate(`/messages/${targetUserId}`);
   };
+
+
+
+
 
   // Show loading spinner while data is being fetched
   if (isLoading) {
@@ -189,7 +270,11 @@ const UserProfile = () => {
             <Col md={6}>
               <h2 className="mb-1">{profileData.username}</h2>
               <p className="text-muted mb-2">@{profileData.email}</p>
-              <p className="mb-3">{profileData.bio}</p>
+              {isOwnProfile ? (
+                <EditableBio bio={profileData.bio} onSave={updateBio} />
+              ) : (
+                <p className="mb-3">{profileData.bio}</p>
+              )}
               <div className="d-flex gap-3 mb-3">
                 <div className="text-center">
                   <h5 className="mb-0">{profileData.stats?.posts || 0}</h5>
@@ -207,8 +292,8 @@ const UserProfile = () => {
             </Col>
             <Col md={3} className="text-md-end">
               {isOwnProfile ? (
-                <Button 
-                  variant="outline-danger" 
+                <Button
+                  variant="outline-danger"
                   className="w-100"
                   onClick={() => navigate('/settings')}
                 >
@@ -223,7 +308,7 @@ const UserProfile = () => {
                   >
                     {profileData.isFollowing ? 'Following' : 'Follow'}
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline-secondary"
                     onClick={() => handleMessage(profileData.userId)}
                   >
@@ -299,8 +384,8 @@ const UserProfile = () => {
               <Accordion.Body>
                 <ListGroup>
                   {marketplacePosts.map(post => (
-                    <ListGroup.Item 
-                      key={post.id} 
+                    <ListGroup.Item
+                      key={post.id}
                       className="d-flex justify-content-between align-items-center"
                       action
                       onClick={() => navigate(`/marketplace/listing/${post.id}`)}
@@ -326,8 +411,8 @@ const UserProfile = () => {
               <Accordion.Body>
                 <ListGroup>
                   {forumPosts.map(post => (
-                    <ListGroup.Item 
-                      key={post.id} 
+                    <ListGroup.Item
+                      key={post.id}
                       className="d-flex justify-content-between align-items-center"
                       action
                       onClick={() => navigate(`/forum/post/${post.id}`)}
