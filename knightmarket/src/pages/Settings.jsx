@@ -13,6 +13,7 @@ import {
 } from 'react-bootstrap-icons';
 import { getCurrentUser, fetchUserAttributes } from '@aws-amplify/auth';
 import { getAuthHeaders } from '../utils/getJWT';
+import { uploadImage } from '../utils/imageUpload';
 
 function Settings() {
   const navigate = useNavigate();
@@ -30,15 +31,14 @@ function Settings() {
   const [uploadSuccess, setUploadSuccess] = useState(null); // Success message for profile picture upload
 
   // Fetch current user data
-  const fetchCurrentUser = async () => {
+  const fetchData = async () => {
+    setLoading(true); // Start loading
     try {
       const user = await getCurrentUser();
       const attributes = await fetchUserAttributes();
       const userId = user.id || attributes.sub;
 
-      if (!userId) {
-        throw new Error('User ID not found in the current user data.');
-      }
+      if (!userId) throw new Error('User ID not found in the current user data.');
 
       setUsername(user.username || 'Unknown User');
       setEmail(attributes.email || 'No email available');
@@ -48,70 +48,89 @@ function Settings() {
       const imageUrl = attributes.picture || null; // Assuming `picture` is the key for the profile picture URL
       setProfilePicture(imageUrl);
 
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching user data:', err);
-      setError('Failed to load user data. Please try again later.');
-      setLoading(false);
-    }
-  };
+      // Fetch blocked users
+      const blockedUsersResponse = await fetch(
+        'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user',
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!blockedUsersResponse.ok) throw new Error('Failed to fetch blocked users');
+      const blockedUsersData = await blockedUsersResponse.json();
 
-  const handleProfilePictureUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      const verifiedHeader = await getAuthHeaders();
-
-      const formData = new FormData();
-      formData.append('file', file); // Attach the file
-
-      const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user/${currentUserId}/profile-picture`, {
-        method: 'POST', // or 'PUT' based on your backend implementation
-        headers: verifiedHeader,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        throw new Error(errorResponse.message || 'Failed to upload profile picture');
-      }
-
-      const data = await response.json();
-
-      // Update the profile picture URL in the state
-      setProfilePicture(data.imageUrl); // Assuming the backend returns the updated image URL
-      setUploadSuccess('Profile picture updated successfully!');
-      setUploadError(null);
-    } catch (err) {
-      console.error('Error uploading profile picture:', err);
-      setUploadError('Failed to upload profile picture. Please try again.');
-      setUploadSuccess(null);
-    }
-  };
-
-  const fetchBlockedUsers = async () => {
-    try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user', {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch blocked users');
-      const data = await response.json();
-
-      const blockedUsersList = data.blockedUsers || [];
+      const blockedUsersList = blockedUsersData.blockedUsers || [];
       setBlockedUsers(blockedUsersList);
+
+      setError(null); // Clear any previous errors
     } catch (err) {
-      console.error('Error fetching blocked users:', err);
-      setError('Failed to fetch blocked users.');
+      console.error('Error fetching data:', err);
+      setError('Failed to load data. Please try again later.');
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
   useEffect(() => {
-    fetchCurrentUser();
-    fetchBlockedUsers();
+    fetchData(); // Fetch data when the component is mounted or refreshed
   }, []);
+
+  const handleProfilePictureUpload = async (e) => {
+    const file = e.target.files[0]; // Get the selected file
+    if (!file) return;
+
+    try {
+      if (!currentUserId) throw new Error('User ID is not set.');
+
+      const fileReader = new FileReader();
+      fileReader.onloadend = async () => {
+        try {
+          const base64Image = fileReader.result.split(',')[1]; // Extract Base64 string
+          const fileName = `${currentUserId}_${file.name}`;
+
+          // Upload the image to S3 and get the URL
+          const s3ImageUrl = await uploadImage(base64Image, fileName);
+          console.log('Uploaded Image URL:', s3ImageUrl);
+
+          const verifiedHeader = await getAuthHeaders();
+          const requestBody = {
+            id: currentUserId,
+            image_url: s3ImageUrl,
+          };
+
+          // Update the profile picture in the backend
+          const response = await fetch(
+            `https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user`,
+            {
+              method: 'PUT',
+              headers: verifiedHeader,
+              body: JSON.stringify(requestBody),
+            }
+          );
+
+          if (!response.ok) {
+            const errorResponse = await response.json();
+            throw new Error(errorResponse.message || 'Failed to update profile picture');
+          }
+
+          setProfilePicture(s3ImageUrl);
+          setUploadSuccess('Profile picture updated successfully!');
+          setUploadError(null); // Clear any previous errors
+        } catch (err) {
+          console.error('Error uploading profile picture:', err);
+          setUploadError('Failed to upload profile picture. Please try again.');
+          setUploadSuccess(null);
+        }
+      };
+
+      fileReader.readAsDataURL(file); // Read the file as a Base64 string
+    } catch (err) {
+      console.error('Error preparing file for upload:', err);
+      setUploadError('Failed to process the file. Please try again.');
+      setUploadSuccess(null);
+    }
+  };
 
   const handleBlockUser = async () => {
     const usernameToBlock = prompt('Enter the username to block:');
@@ -120,17 +139,20 @@ function Settings() {
     try {
       const verifiedHeader = await getAuthHeaders();
 
-      const getResponse = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?username=${usernameToBlock}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const getResponse = await fetch(
+        `https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?username=${usernameToBlock}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
       if (!getResponse.ok) throw new Error('Failed to fetch user ID');
 
       const responseData = await getResponse.json();
       const users = JSON.parse(responseData.body).users;
-      const userToBlock = users.find(user => user.username === usernameToBlock);
+      const userToBlock = users.find((user) => user.username === usernameToBlock);
 
       if (!userToBlock || !userToBlock.id) {
         throw new Error('User ID not found for the provided username.');
@@ -145,11 +167,14 @@ function Settings() {
         blocked_id: userIdToBlock,
       };
 
-      const putResponse = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user', {
-        method: 'PUT',
-        headers: verifiedHeader,
-        body: JSON.stringify(requestBody),
-      });
+      const putResponse = await fetch(
+        'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user',
+        {
+          method: 'PUT',
+          headers: verifiedHeader,
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       if (!putResponse.ok) {
         const errorResponse = await putResponse.json();
@@ -168,23 +193,22 @@ function Settings() {
     try {
       const verifiedHeader = await getAuthHeaders();
 
-      if (!currentUserId) {
-        throw new Error('Current user ID is not set.');
-      }
-      if (!userIdToUnblock) {
-        throw new Error('User ID to unblock is not provided.');
-      }
+      if (!currentUserId) throw new Error('Current user ID is not set.');
+      if (!userIdToUnblock) throw new Error('User ID to unblock is not provided.');
 
       const requestBody = {
         id: currentUserId,
         unblocked_id: userIdToUnblock,
       };
 
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user', {
-        method: 'PUT',
-        headers: verifiedHeader,
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user',
+        {
+          method: 'PUT',
+          headers: verifiedHeader,
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       if (!response.ok) {
         const errorResponse = await response.json();
@@ -253,7 +277,13 @@ function Settings() {
                 <CameraFill className="text-danger me-2" /> Profile Picture
               </Form.Label>
               {profilePicture ? (
-                <Image src={profilePicture} roundedCircle width={80} height={80} className="mb-3" />
+                <Image
+                  src={profilePicture}
+                  roundedCircle
+                  width={80}
+                  height={80}
+                  className="mb-3"
+                />
               ) : (
                 <div className="mb-3">No profile picture uploaded</div>
               )}
@@ -273,7 +303,7 @@ function Settings() {
           </Form>
         </Card.Body>
       </Card>
-
+  
       <Card className="shadow-sm">
         <Card.Header className="bg-white">
           <h2 className="h5 mb-0 d-flex align-items-center text-danger">
@@ -313,5 +343,4 @@ function Settings() {
     </Container>
   );
 }
-
 export default Settings;
