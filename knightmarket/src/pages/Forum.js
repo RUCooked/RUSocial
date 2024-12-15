@@ -13,42 +13,42 @@ function Forum() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const isAuthorized = true; // Mock authorization check
+  const isAuthorized = true;
 
   // Fetch posts from API
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const verifiedHeader = await getAuthHeaders();
-      try {
-        const response = await axios.get(
-          'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum/',
-          {
-            headers: verifiedHeader,
-          });
-  
-        if (!response.ok) {
-          throw new Error('Failed to fetch posts');
-        }
-  
-        const data = await response.json();
-  
-        // Log the full response to verify structure
-        console.log('Full API Response:', data);
-  
-        // Parse the `body` key if it exists and set the posts
-        const parsedBody = JSON.parse(data.body);
-        setPosts(parsedBody.posts || []); // Use `posts` array from parsed `body`
+  const fetchPosts = async () => {
+    const verifiedHeader = await getAuthHeaders();
+    try {
+      const response = await axios.get(
+        'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum/',
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        const parsedBody = JSON.parse(response.data.body);
+        const apiListings = parsedBody.map(post => ({
+          id: post.postsId,
+          title: post.title,
+          body: post.body,
+          images: post.images_url || [],
+          datePosted: post.date_posted,
+          updatedAt: post.updated_at
+        }));
+
+        setPosts(apiListings);
+        setLoading(false);
       } catch (err) {
-        setError(err.message);
-      } finally {
+        console.error('Error fetching listings:', err);
+        setError('Failed to load listings. Please try again later.');
         setLoading(false);
       }
     };
   
-    fetchPosts();
-  }, []);
+    useEffect(() => {
+      fetchPosts();
+    }, []);
   
-
   return (
     <Container className="py-4">
       {/* Header Section */}
