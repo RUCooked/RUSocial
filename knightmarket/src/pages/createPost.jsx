@@ -23,8 +23,8 @@ function CreatePost({ addPost }) {
 
     try{
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum',{
-        method: 'POST',
-        headers: verifiedHeader,
+        httpMethod: 'POST',
+        headers: {verifiedHeader},
         body: JSON.stringify({
           title: postingData.title,
           body: postingData.body,
@@ -68,9 +68,9 @@ function CreatePost({ addPost }) {
 
           // Prepare data for the listing
           const postingData = {
-            author_id: userAttributes.sub, 
             title: formData.title,
             body: formData.body,
+            author_id: userAttributes.sub, 
             image_url: imageUrl
           };
 
