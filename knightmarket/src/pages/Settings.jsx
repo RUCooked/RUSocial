@@ -45,7 +45,7 @@ function Settings() {
       setCurrentUserId(userId);
 
       // Fetch profile picture
-      const imageUrl = attributes.image_url || null; // Assuming `picture` is the key for the profile picture URL
+      const imageUrl = attributes.ima || null; // Assuming `picture` is the key for the profile picture URL
       setProfilePicture(imageUrl);
 
       // Fetch blocked users
