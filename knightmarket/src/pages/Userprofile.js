@@ -161,7 +161,7 @@ const UserProfile = () => {
         method: 'PUT',
         headers: verifiedHeader,
         body: JSON.stringify({
-          id: currentUser.usedrId,
+          id: currentUser.userId,
           bio: newBio
         })
       });
