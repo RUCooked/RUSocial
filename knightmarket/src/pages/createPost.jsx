@@ -18,6 +18,7 @@ function CreatePost({ addPost }) {
 
   const createPost = async (postingData) =>{
     const verifiedHeader = await getAuthHeaders();
+    console.log(verifiedHeader);
     try{
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum',{
         method: 'POST',
@@ -29,14 +30,15 @@ function CreatePost({ addPost }) {
           image_url: postingData.image_url || ''
         })
       });
+      console.log(response)
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to post listing.');
+        throw new Error(errorData.message || 'Failed to post.');
       }
       return await response.json();
     } catch (err) {
       console.error(err);
-      throw new Error('Failed to create listing.');
+      throw new Error('Failed to create post.');
     }
   };
   const handleSubmit = async (e) => {
@@ -63,18 +65,18 @@ function CreatePost({ addPost }) {
 
           // Prepare data for the listing
           const postingData = {
-            author_id_id: userAttributes.sub, 
+            author_id: userAttributes.sub, 
             title: formData.title,
             body: formData.body,
-            images_url: imageUrl
+            image_url: imageUrl
           };
 
           // Post the listing
-          const newListing = await createPost(postingData);
-          console.log('Listing created successfully:', newListing);
+          const newPosting = await createPost(postingData);
+          console.log('Listing created successfully:', newPosting);
 
           if (addPost) {
-            addPost(newListing);
+            addPost(newPosting);
           }
 
           // Navigate back to the forum
@@ -93,6 +95,13 @@ function CreatePost({ addPost }) {
     }
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
@@ -104,14 +113,17 @@ function CreatePost({ addPost }) {
       <h2 className="mb-4">Create New Post</h2>
       <Card className="shadow-sm">
         <Card.Body>
+          {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
+            <Form.Group controlId="Title" className="mb-3">
               <Form.Label>Title</Form.Label>
               <Form.Control
                 type="text"
                 name="title"
+                value={formData.title}
+                onChange={handleChange}
                 required
-                placeholder="Enter post title"
+                placeholder="Enter listing title"
               />
             </Form.Group>
 
@@ -121,6 +133,7 @@ function CreatePost({ addPost }) {
                 as="textarea"
                 rows={6}
                 name="content"
+                onChange={handleChange}
                 required
                 placeholder="Write your post content here..."
               />
@@ -141,7 +154,7 @@ function CreatePost({ addPost }) {
                 Cancel
               </Button>
               <Button variant="primary" type="submit">
-                Create Post
+                {isSubmitting ? 'Submitting...' : 'Add Post'}
               </Button>
             </div>
           </Form>
