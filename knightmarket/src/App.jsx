@@ -66,9 +66,9 @@ function AppLayout() {
               </RequireAuth>
             }
           />
-         {//<Route path="/Messages" element={<RequireAuth><Messages /></RequireAuth>} />}
-         }<Route path="/Messages" element={<Messages />} />
-
+         <Route path="/Messages" element={<RequireAuth><Messages /></RequireAuth>} />
+         {//<Route path="/Messages" element={<Messages />} />
+         }
           <Route path="/DirectMessages" element={<RequireAuth>
                 <DirectMessages />
               </RequireAuth>
