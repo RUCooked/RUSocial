@@ -3,7 +3,7 @@ import { uploadImage } from '../utils/imageUpload';
 import { getAuthHeaders } from '../utils/getJWT';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-import { getCurrentUser } from '@aws-amplify/auth';
+import { fetchUserAttributes, getCurrentUser } from '@aws-amplify/auth';
 
 function MakeListing({ addListing }) {
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ function MakeListing({ addListing }) {
         throw new Error('Please upload an image.');
       }
 
-      const { userId } = await getCurrentUser();
+      const userAttributes = await fetchUserAttributes();
 
       // Convert image to Base64
       const reader = new FileReader();
@@ -67,7 +67,7 @@ function MakeListing({ addListing }) {
 
           // Prepare data for the listing
           const listingData = {
-            user_id: userId, 
+            user_id: userAttributes.sub, 
             title: formData.title,
             product_description: formData.description,
             product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
