@@ -14,7 +14,8 @@ const Home = () => {
             <Col md={6} className="mb-4 mb-md-0">
               <h1 className="display-4 fw-bold mb-3">Welcome to KnightMarket</h1>
               <p className="lead mb-4">
-                Your one-stop marketplace for Rutgers students to buy, sell, and connect with fellow Knights.
+                Your one-stop marketplace for Rutgers students to <br />
+                buy, sell, and connect with fellow Knights.
               </p>
               <Button 
                 as={Link} 
