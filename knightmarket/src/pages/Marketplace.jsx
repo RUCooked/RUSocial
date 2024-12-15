@@ -326,15 +326,15 @@ function Marketplace() {
             {selectedListing && (
                 <>
                     <Image
-                        src={
-                            userDetails?.image_url ||
-                            selectedListing.images[0] ||
-                            '/placeholder.jpg'
-                        }
-                        alt={selectedListing.title}
-                        className="mb-3"
-                        style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
-                        rounded
+                      src={
+                        selectedListing.images[0] || // Listing image takes priority
+                        userDetails?.image_url ||    // User profile picture as a fallback
+                        '/placeholder.jpg'           // Default placeholder
+                      }
+                      alt={selectedListing.title}
+                      className="mb-3"
+                      style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
+                      rounded
                     />
                     <h5 className="text-muted">Description</h5>
                     <p>{selectedListing.description}</p>
