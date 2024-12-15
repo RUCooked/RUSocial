@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, Modal, Image, Offcanvas, Form } from 'react-bootstrap';
 import { PlusCircle, PersonCircle, Funnel } from 'react-bootstrap-icons';
 import { getAuthHeaders } from '../utils/getJWT';
+import { getCurrentUser } from '@aws-amplify/auth';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { API_ENDPOINTS } from '../config/apis';
@@ -19,11 +20,40 @@ function Marketplace() {
   const [userDetails, setUserDetails] = useState(null); 
   const [startDate, setStartDate] = useState(null); // Start date for filtering
   const [endDate, setEndDate] = useState(null);
+  const [blockedUsers, setBlockedUsers] = useState([]);
 
   const [priceRange, setPriceRange] = useState({
     minPrice: '',
     maxPrice: ''
   });
+
+  const fetchBlockedUsers = async () => {
+    try {
+      const user = await getCurrentUser(); // Get the current user
+      const username = user.username;
+  
+      // Call the provided endpoint to fetch the blocked users
+      const response = await axios.get(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user`, {
+        params: { username }, // Pass the username as a query string parameter
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      // Parse and set blocked users
+      const userData = JSON.parse(response.data.body);
+  
+      if (userData.users && userData.users.length > 0) {
+        setBlockedUsers(userData.users[0].blocked_ids || []);
+      } else {
+        console.warn('No blocked users found for this user.');
+        setBlockedUsers([]); // Set to an empty array if no blocked users are found
+      }
+    } catch (err) {
+      console.error('Error fetching blocked users:', err);
+      setBlockedUsers([]); // Set to an empty array on error to avoid breaking the app
+    }
+  };
 
   // Fetch Listings
   const fetchListings = async () => {
@@ -58,7 +88,25 @@ function Marketplace() {
   };
 
   useEffect(() => {
-    fetchListings();
+    if (blockedUsers.length > 0) {
+      const filtered = listings.filter(
+        (listing) => !blockedUsers.includes(listing.user)
+      );
+      setFilteredListings(filtered);
+    } else {
+      setFilteredListings(listings); // If no blocked users, show all listings
+    }
+  }, [blockedUsers, listings]);
+
+  // Fetch blocked users and listings on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      await fetchBlockedUsers();
+      await fetchListings();
+    };
+
+    fetchData();
   }, []);
 
   const handleViewDetails = async (listing) => {
