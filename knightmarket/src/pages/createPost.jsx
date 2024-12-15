@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import * as Amplify from 'aws-amplify';
 import { uploadImage } from '../utils/imageUpload';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+import { fetchUserAttributes, getCurrentUser } from '@aws-amplify/auth';
 
 function CreatePost({ addPost, userId }) {
   const navigate = useNavigate();
@@ -14,58 +14,32 @@ function CreatePost({ addPost, userId }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchUserIdByEmail = async (email) => {
+  const createPostData = async (listingData) => {
+    const verifiedHeader = await getAuthHeaders();
     try {
-      const response = await fetch(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?email=${encodeURIComponent(email)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'credentials': 'masterknight:chickenNugget452!' // Secure this later
-        }
+      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum', {
+        method: 'POST',
+        headers: verifiedHeader,
+        body: JSON.stringify({
+          user_id: listingData.author_id, // Pass user_id from database
+          title: listingData.title,
+          body: listingData.body,
+          images_url: listingData.images_url || ''
+        })
       });
+
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch user information.');
       }
 
-      const data = await response.json();
-      if (data.length === 0) {
-        throw new Error('No user found with the provided email.');
-      }
-
-      return data[0].user_id; // Assuming the API returns an array of users
-    } catch (err) {
-      console.error('Error fetching user_id:', err);
-      throw err;
-    }
-  };
-  const createPostData = async (postData) => {
-    try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/dev/forum', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          credentials: 'masterknight:chickenNugget452!' // Replace with real credentials
-        },
-        body: JSON.stringify({
-          title: postData.title,
-          body: postData.body,
-          user_id: postData.author_id, // Pass user_id from database
-          images_url: postData.images_url || ''
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to post data.');
-      }
-
       return await response.json();
-    } catch (err) {
-      console.error(err);
-      throw new Error('Failed to create post.');
-    }
-  };
+      } catch (err) {
+        console.error(err);
+        throw new Error('Failed to create listing.');
+      }
+    };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,28 +51,28 @@ function CreatePost({ addPost, userId }) {
         throw new Error('Please upload an image.');
       }
 
+      const userAttributes = await fetchUserAttributes();
+
       // Convert image to Base64
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64Image = reader.result.split(',')[1]; // Strip off the prefix
-        console.log('Base64 Image:', base64Image);
 
         try {
           // Upload image and get URL
           const imageUrl = await uploadImage(base64Image, `post_${Date.now()}`);
           console.log('Image uploaded successfully:', imageUrl);
-          alert(`Image URL: ${imageUrl}`);
 
           // Prepare data for the post
-          const postData = {
+          const listingData = {
+            user_id: userAttributes.sub, 
             title: formData.title,
-            author_id: userId,
-            body: formData.content,
-            image_url: imageUrl
+            body: formData.body,
+            images_url: imageUrl
           };
 
           // // Post the data
-          const newPost = await createPostData(postData);  // Changed from postData to createPostData
+          const newPost = await createPostData(listingDataData);  // Changed from postData to createPostData
           console.log('Post created successfully:', newPost);
 
           // navigate('/forum');
