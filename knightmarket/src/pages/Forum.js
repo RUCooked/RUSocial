@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { Container, Card, Button, Badge } from 'react-bootstrap';
 import { PlusCircle, ChatLeftText } from 'react-bootstrap-icons';
@@ -16,7 +17,7 @@ function Forum() {
       const verifiedHeader = await getAuthHeaders();
       try {
         const response = await axios.get(
-          'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/no-auth/forum/',
+          'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum/',
           {
             headers: verifiedHeader,
           });
