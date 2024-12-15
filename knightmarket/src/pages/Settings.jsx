@@ -51,40 +51,82 @@ function Settings() {
         },
       });
       const parsedUser = JSON.parse(userResponse.data.body);
-      // Fetch profile picture
-      const imageUrl = parsedUser.users[0].image_url || null; // Assuming `picture` is the key for the profile picture URL
+
+      const userData = parsedUser.users[0]
+      const imageUrl = userData.image_url || null; // Assuming `picture` is the key for the profile picture URL
       setProfilePicture(imageUrl);
 
-      // Fetch blocked users
-      const blockedUsersResponse = await fetch(
-        'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user',
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+
+      if (userData.blocked_ids) {
+        let blockedIdsList;
+        
+
+        if (Array.isArray(userData.blocked_ids)) {
+          blockedIdsList = userData.blocked_ids;
+        } else if (typeof userData.blocked_ids === 'string') {
+          blockedIdsList = userData.blocked_ids.trim() ? userData.blocked_ids.split(',') : [];
+        } else {
+          blockedIdsList = [];
         }
-      );
-      if (!blockedUsersResponse.ok) throw new Error('Failed to fetch blocked users');
-      const blockedUsersData = await blockedUsersResponse.json();
+  
 
-      const blockedUsersList = blockedUsersData.blockedUsers || [];
-      setBlockedUsers(blockedUsersList);
+        blockedIdsList = blockedIdsList.filter(id => id && id.trim());
+  
+        if (blockedIdsList.length > 0) {
+          const blockedUsersPromises = blockedIdsList.map(blockedId =>
+            axios.get(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?id=${blockedId}`, {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            })
+          );
+  
+          try {
+            const blockedUsersResponses = await Promise.all(blockedUsersPromises);
+            
+            const blockedUsersList = blockedUsersResponses
+              .map(response => {
+                try {
+                  const parsedData = JSON.parse(response.data.body);
+                  const user = parsedData.users[0];
+                  return user ? {
+                    id: user.id,
+                    username: user.username
+                  } : null;
+                } catch (e) {
+                  console.error('Error parsing blocked user data:', e);
+                  return null;
+                }
+              })
+              .filter(user => user !== null); 
+  
+            setBlockedUsers(blockedUsersList);
+          } catch (err) {
+            console.error('Error fetching blocked users details:', err);
+            setBlockedUsers([]);
+          }
+        } else {
+          setBlockedUsers([]);
+        }
+      } else {
+        setBlockedUsers([]);
+      }
 
-      setError(null); // Clear any previous errors
+      setError(null); 
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load data. Please try again later.');
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false); 
     }
   };
 
   useEffect(() => {
-    fetchData(); // Fetch data when the component is mounted or refreshed
+    fetchData(); 
   }, []);
 
   const handleProfilePictureUpload = async (e) => {
-    const file = e.target.files[0]; // Get the selected file
+    const file = e.target.files[0]; 
     if (!file) return;
 
     try {
@@ -93,7 +135,7 @@ function Settings() {
       const fileReader = new FileReader();
       fileReader.onloadend = async () => {
         try {
-          const base64Image = fileReader.result.split(',')[1]; // Extract Base64 string
+          const base64Image = fileReader.result.split(',')[1]; 
           const fileName = `${currentUserId}_${file.name}`;
 
           // Upload the image to S3 and get the URL
@@ -106,7 +148,6 @@ function Settings() {
             image_url: s3ImageUrl,
           };
 
-          // Update the profile picture in the backend
           const response = await fetch(
             `https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user`,
             {
@@ -123,7 +164,7 @@ function Settings() {
 
           setProfilePicture(s3ImageUrl);
           setUploadSuccess('Profile picture updated successfully!');
-          setUploadError(null); // Clear any previous errors
+          setUploadError(null); 
         } catch (err) {
           console.error('Error uploading profile picture:', err);
           setUploadError('Failed to upload profile picture. Please try again.');
@@ -131,7 +172,7 @@ function Settings() {
         }
       };
 
-      fileReader.readAsDataURL(file); // Read the file as a Base64 string
+      fileReader.readAsDataURL(file); 
     } catch (err) {
       console.error('Error preparing file for upload:', err);
       setUploadError('Failed to process the file. Please try again.');
