@@ -122,6 +122,8 @@ const UserProfile = () => {
         // Now we can access the users array
         const userData = parsedData.users[0];
 
+        const postCounts = await fetchPosts(targetUserId);
+
         // Transform the data to match our component's expected structure
         const transformedData = {
           username: userData.username,
@@ -133,10 +135,10 @@ const UserProfile = () => {
           stats: {
             followers: userData.followers || 0,
             following: userData.following || 0,
-            marketplacePosts: 0,
-            forumPosts: 0,
+            marketplacePosts: postCounts.marketplaceCount || 0,
+            forumPosts: postCounts.forumCount || 0,
             blockedUsers: 0,
-            posts: Number(forumPosts + marketplacePosts),
+            posts: postCounts.totalPosts || 0,
           }
         };
 
@@ -170,7 +172,6 @@ const UserProfile = () => {
         throw new Error('Failed to update bio');
       }
 
-      // Update local state
       setProfileData(prev => ({
         ...prev,
         bio: newBio
@@ -178,11 +179,59 @@ const UserProfile = () => {
 
     } catch (error) {
       console.error('Error updating bio:', error);
-      // You might want to show an error message to the user
     }
   };
 
-  // Handler for following/unfollowing users
+  const fetchPosts = async (userId) => {
+    try {
+      // get marketplace posts count
+      const marketplaceResponse = await fetch(`${API_ENDPOINTS.MARKETPLACE}?user_id=${userId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      // get forum posts count
+      const forumResponse = await fetch(`${API_ENDPOINTS.FORUM}?user_id=${userId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+
+      // First, get the raw responses
+      const marketplaceRawData = await marketplaceResponse.json();
+      const forumRawData = await forumResponse.json();
+
+      // Parse the body if it's a string (similar to how we handled the user data)
+      const marketplaceData = marketplaceRawData.body ? JSON.parse(marketplaceRawData.body) : marketplaceRawData;
+      const forumData = forumRawData.body ? JSON.parse(forumRawData.body) : forumRawData;
+
+      console.log('Filtered marketplace posts:', marketplacePosts);
+      console.log('Filtered forum posts:', forumPosts);
+
+      // Calculate counts
+      const marketplaceCount = Array.isArray(marketplaceData) ? marketplaceData.length : 0;
+      const forumCount = Array.isArray(forumData) ? forumData.length : 0;
+
+      const totalPosts = marketplaceCount + forumCount;
+
+      return {
+        marketplaceData: marketplaceData, // Keep the full data for potential use
+        forumData: forumData, // Keep the full data for potential use
+        marketplaceCount: marketplaceCount,
+        forumCount: forumCount,
+        totalPosts: totalPosts
+      };
+
+    } catch (error) {
+      console.error('Error fetching post counts:', error);
+      return { marketplacePosts: 0, forumPosts: 0 };
+    }
+  };
+
   const handleFollow = async (targetUserId) => {
     const verifiedHeader = await getAuthHeaders();
     try {
@@ -199,7 +248,6 @@ const UserProfile = () => {
         throw new Error('Failed to update follow status');
       }
 
-      // Update profile data to reflect new follow status
       setProfileData(prev => ({
         ...prev,
         isFollowing: !prev.isFollowing
@@ -224,7 +272,6 @@ const UserProfile = () => {
 
 
 
-  // Show loading spinner while data is being fetched
   if (isLoading) {
     return (
       <Container className="py-5 text-center">
@@ -234,7 +281,6 @@ const UserProfile = () => {
     );
   }
 
-  // Show error message if data fetch failed
   if (error) {
     return (
       <Container className="py-5 text-center">
@@ -249,7 +295,7 @@ const UserProfile = () => {
     );
   }
 
-  // Don't render anything if profile data isn't available
+  // don't render anything if profile data isn't available
   if (!profileData) return null;
   console.log(profileData);
 
@@ -379,51 +425,70 @@ const UserProfile = () => {
           <Accordion className="mb-4">
             <Accordion.Item eventKey="0">
               <Accordion.Header>
-                <Shop className="me-2" /> Marketplace Listings
+                <Shop className="me-2" /> Marketplace Listings ({profileData.stats?.marketplacePosts || 0})
               </Accordion.Header>
               <Accordion.Body>
                 <ListGroup>
-                  {marketplacePosts.map(post => (
-                    <ListGroup.Item
-                      key={post.id}
-                      className="d-flex justify-content-between align-items-center"
-                      action
-                      onClick={() => navigate(`/marketplace/listing/${post.id}`)}
-                    >
-                      <div>
-                        <h6 className="mb-0">{post.title}</h6>
-                        <small className="text-muted">{post.date}</small>
-                      </div>
-                      <Badge bg="success">{post.price}</Badge>
+                  {profileData.stats.marketplaceData && profileData.stats.marketplaceData.length > 0 ? (
+                    profileData.stats.marketplaceData.map(post => (
+                      <ListGroup.Item
+                        key={post.postsId}
+                        className="d-flex justify-content-between align-items-center"
+                        action
+                        onClick={() => navigate(`/marketplace/listing/${post.postsId}`)}
+                      >
+                        <div>
+                          <h6 className="mb-0">{post.title}</h6>
+                          <small className="text-muted">
+                            Posted: {new Date(post.date_posted).toLocaleDateString()}
+                          </small>
+                        </div>
+                        <div>
+                          <Badge bg="success">${parseFloat(post.product_price).toFixed(2)}</Badge>
+                        </div>
+                      </ListGroup.Item>
+                    ))
+                  ) : (
+                    <ListGroup.Item className="text-center text-muted">
+                      No marketplace listings yet
                     </ListGroup.Item>
-                  ))}
+                  )}
                 </ListGroup>
               </Accordion.Body>
             </Accordion.Item>
           </Accordion>
 
-          {/* Forum Posts Accordion */}
           <Accordion>
             <Accordion.Item eventKey="0">
               <Accordion.Header>
-                <ChatSquareText className="me-2" /> Forum Posts
+                <ChatSquareText className="me-2" /> Forum Posts ({profileData.stats?.forumPosts || 0})
               </Accordion.Header>
               <Accordion.Body>
                 <ListGroup>
-                  {forumPosts.map(post => (
-                    <ListGroup.Item
-                      key={post.id}
-                      className="d-flex justify-content-between align-items-center"
-                      action
-                      onClick={() => navigate(`/forum/post/${post.id}`)}
-                    >
-                      <div>
-                        <h6 className="mb-0">{post.title}</h6>
-                        <small className="text-muted">{post.date}</small>
-                      </div>
-                      <Badge bg="primary">{post.replies} replies</Badge>
+                  {profileData.stats.forumData && profileData.stats.forumData.length > 0 ? (
+                    profileData.stats.forumData.map(post => (
+                      <ListGroup.Item
+                        key={post.postsId}
+                        className="d-flex justify-content-between align-items-center"
+                        action
+                        onClick={() => navigate(`/forum/post/${post.postsId}`)}
+                      >
+                        <div>
+                          <h6 className="mb-0">{post.title}</h6>
+                          <small className="text-muted">
+                            Posted: {new Date(post.date_posted).toLocaleDateString()}
+                          </small>
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <Badge bg="primary">{post.replies || 0} replies</Badge>
+                        </div>
+                      </ListGroup.Item>
+                    ))
+                  ) : (
+                    <ListGroup.Item className="text-center text-muted">
+                      No forum posts yet
                     </ListGroup.Item>
-                  ))}
+                  )}
                 </ListGroup>
               </Accordion.Body>
             </Accordion.Item>
