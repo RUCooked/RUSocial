@@ -18,14 +18,17 @@ function CreatePost({ addPost }) {
 
   const createPost = async (postingData) =>{
     const verifiedHeader = await getAuthHeaders();
+    console.log("Authorization Header:", verifiedHeader);
+
+
     try{
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum',{
         method: 'POST',
         headers: verifiedHeader,
         body: JSON.stringify({
-          author_id: postingData.author_id,
           title: postingData.title,
           body: postingData.body,
+          author_id: postingData.author_id,
           image_url: postingData.image_url || ''
         })
       });
