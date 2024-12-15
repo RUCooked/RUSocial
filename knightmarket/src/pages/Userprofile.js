@@ -78,18 +78,6 @@ const UserProfile = () => {
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Mock data for marketplace posts - replace with API data later
-  const marketplacePosts = [
-    { id: 1, title: "Calculus Textbook", price: "$45", date: "2024-03-15" },
-    { id: 2, title: "Desk Lamp", price: "$15", date: "2024-03-10" },
-  ];
-
-  // Mock data for forum posts - replace with API data later
-  const forumPosts = [
-    { id: 1, title: "Best study spots on campus?", replies: 12, date: "2024-03-14" },
-    { id: 2, title: "Looking for CS study group", replies: 8, date: "2024-03-12" },
-  ];
-
   // Load profile data when component mounts or when profileId changes
   useEffect(() => {
     const loadProfileData = async () => {
@@ -139,6 +127,8 @@ const UserProfile = () => {
             forumPosts: postCounts.forumCount || 0,
             blockedUsers: 0,
             posts: postCounts.totalPosts || 0,
+            marketplaceData: postCounts.marketplaceData,
+            forumData: postCounts.forumData
           }
         };
 
@@ -201,29 +191,62 @@ const UserProfile = () => {
       );
 
 
-      // First, get the raw responses
+      // Parse the responses
       const marketplaceRawData = await marketplaceResponse.json();
       const forumRawData = await forumResponse.json();
 
-      // Parse the body if it's a string (similar to how we handled the user data)
-      const marketplaceData = marketplaceRawData.body ? JSON.parse(marketplaceRawData.body) : marketplaceRawData;
-      const forumData = forumRawData.body ? JSON.parse(forumRawData.body) : forumRawData;
+      // Let's log the raw data to understand its structure
+      console.log('Raw marketplace data:', marketplaceRawData);
+      console.log('Raw forum data:', forumRawData);
 
-      console.log('Filtered marketplace posts:', marketplacePosts);
-      console.log('Filtered forum posts:', forumPosts);
+      // Handle the data based on how it's structured
+      let marketplacePosts = [];
+      let forumPosts = [];
 
-      // Calculate counts
-      const marketplaceCount = Array.isArray(marketplaceData) ? marketplaceData.length : 0;
-      const forumCount = Array.isArray(forumData) ? forumData.length : 0;
+      // For marketplace posts
+      if (marketplaceRawData.body) {
+        try {
+          // If body is a string, parse it
+          const parsedMarketplace = typeof marketplaceRawData.body === 'string'
+            ? JSON.parse(marketplaceRawData.body)
+            : marketplaceRawData.body;
 
-      const totalPosts = marketplaceCount + forumCount;
+          // Now we can safely use the data
+          marketplacePosts = Array.isArray(parsedMarketplace)
+            ? parsedMarketplace.filter(post => post.user_id === userId)
+            : [];
+        } catch (e) {
+          console.error('Error parsing marketplace data:', e);
+        }
+      }
+
+      // For forum posts
+      if (forumRawData.body) {
+        try {
+          // If body is a string, parse it
+          const parsedForum = typeof forumRawData.body === 'string'
+            ? JSON.parse(forumRawData.body)
+            : forumRawData.body;
+
+          // Now we can safely use the data
+          forumPosts = Array.isArray(parsedForum)
+            ? parsedForum.filter(post => post.user_id === userId)
+            : [];
+        } catch (e) {
+          console.error('Error parsing forum data:', e);
+        }
+      }
+
+      // Log the processed data
+      console.log('Processed marketplace posts:', marketplacePosts);
+      console.log('Processed forum posts:', forumPosts);
 
       return {
-        marketplaceData: marketplaceData, // Keep the full data for potential use
-        forumData: forumData, // Keep the full data for potential use
-        marketplaceCount: marketplaceCount,
-        forumCount: forumCount,
-        totalPosts: totalPosts
+        marketplaceData: marketplacePosts,
+        forumData: forumPosts,
+        marketplaceCount: marketplacePosts.length,
+        forumCount: forumPosts.length,
+        totalPosts: marketplacePosts.length + forumPosts.length
       };
 
     } catch (error) {
@@ -435,7 +458,7 @@ const UserProfile = () => {
                         key={post.postsId}
                         className="d-flex justify-content-between align-items-center"
                         action
-                        onClick={() => navigate(`/marketplace/listing/${post.postsId}`)}
+                        onClick={() => navigate(`/marketplace`)}
                       >
                         <div>
                           <h6 className="mb-0">{post.title}</h6>
@@ -471,7 +494,7 @@ const UserProfile = () => {
                         key={post.postsId}
                         className="d-flex justify-content-between align-items-center"
                         action
-                        onClick={() => navigate(`/forum/post/${post.postsId}`)}
+                        onClick={() => navigate(`/forum`)}
                       >
                         <div>
                           <h6 className="mb-0">{post.title}</h6>
