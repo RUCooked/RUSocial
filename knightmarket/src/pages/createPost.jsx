@@ -63,7 +63,7 @@ function CreatePost({ addPost }) {
 
           // Prepare data for the listing
           const postingData = {
-            user_id: userAttributes.sub, 
+            author_id_id: userAttributes.sub, 
             title: formData.title,
             body: formData.body,
             images_url: imageUrl
@@ -92,6 +92,7 @@ function CreatePost({ addPost }) {
       setIsSubmitting(false);
     }
   };
+
 
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
