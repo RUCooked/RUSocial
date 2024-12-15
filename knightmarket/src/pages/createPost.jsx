@@ -1,46 +1,66 @@
 import React, { useState } from 'react';
 import { uploadImage } from '../utils/imageUpload';
-import { getAuthHeaders } from '../utils/getJWT';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-import { fetchUserAttributes, getCurrentUser } from '@aws-amplify/auth';
+import { Auth } from 'aws-amplify';
 
-function CreatePost({ addPost, userId }) {
+async function getAuthHeaders() {
+  try {
+    const session = await Auth.currentSession();
+    const token = session.getIdToken().getJwtToken();
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    return {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+  } catch (error) {
+    console.error('Error fetching authentication token:', error.message);
+    throw new Error('User not authenticated. Please log in.');
+  }
+}
+
+function CreatePost() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
-    body: ''
+    body: '',
   });
   const [image, setImage] = useState(null);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createPostData = async (listingData) => {
-    const verifiedHeader = await getAuthHeaders();
     try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum', {
-        method: 'POST',
-        headers: verifiedHeader,
-        body: JSON.stringify({
-          user_id: listingData.author_id, // Pass user_id from database
-          title: listingData.title,
-          body: listingData.body,
-          images_url: listingData.images_url || ''
-        })
-      });
-
+      const headers = await getAuthHeaders();
+      const response = await fetch(
+        'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum',
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            user_id: listingData.user_id,
+            title: listingData.title,
+            body: listingData.body,
+            images_url: listingData.images_url || '',
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch user information.');
+        throw new Error(errorData.message || 'Failed to create post.');
       }
 
       return await response.json();
-      } catch (err) {
-        console.error(err);
-        throw new Error('Failed to create listing.');
-      }
-    };
+    } catch (err) {
+      console.error('Error creating post:', err.message);
+      throw err;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,30 +72,33 @@ function CreatePost({ addPost, userId }) {
         throw new Error('Please upload an image.');
       }
 
-      const userAttributes = await fetchUserAttributes();
-
       // Convert image to Base64
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64Image = reader.result.split(',')[1]; // Strip off the prefix
+        const base64Image = reader.result.split(',')[1];
 
         try {
           // Upload image and get URL
           const imageUrl = await uploadImage(base64Image, `post_${Date.now()}`);
           console.log('Image uploaded successfully:', imageUrl);
 
+          // Fetch user attributes
+          const user = await Auth.currentAuthenticatedUser();
+          const userId = user.attributes.sub;
+
           // Prepare data for the post
           const listingData = {
-            user_id: userAttributes.sub, 
+            user_id: userId,
             title: formData.title,
             body: formData.body,
-            images_url: imageUrl
+            images_url: imageUrl,
           };
-          // // Post the data
-          const newPost = await createPostData(listingData);  // Changed from postData to createPostData
+
+          // Post the data
+          const newPost = await createPostData(listingData);
           console.log('Post created successfully:', newPost);
 
-          // navigate('/forum');
+          navigate('/forum');
         } catch (err) {
           setError(err.message);
         } finally {
@@ -94,7 +117,7 @@ function CreatePost({ addPost, userId }) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -121,13 +144,13 @@ function CreatePost({ addPost, userId }) {
               />
             </Form.Group>
 
-            <Form.Group controlId="postContent" className="mb-3">
+            <Form.Group controlId="postBody" className="mb-3">
               <Form.Label>Content</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={6}
-                name="content"
-                value={formData.content}
+                name="body"
+                value={formData.body}
                 onChange={handleChange}
                 required
                 placeholder="Enter post content..."
@@ -145,7 +168,11 @@ function CreatePost({ addPost, userId }) {
             </Form.Group>
 
             <div className="d-flex gap-2 justify-content-end">
-              <Button variant="secondary" onClick={() => navigate('/forum')} disabled={isSubmitting}>
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/forum')}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button variant="primary" type="submit" disabled={isSubmitting}>
