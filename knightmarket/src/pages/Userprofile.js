@@ -11,6 +11,7 @@ import {
   Form,
   Image,
   ListGroup,
+  Modal,
   Spinner
 } from 'react-bootstrap';
 import {
@@ -77,6 +78,9 @@ const UserProfile = () => {
   const [profileData, setProfileData] = useState(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null);
+
 
   // Load profile data when component mounts or when profileId changes
   useEffect(() => {
@@ -105,10 +109,13 @@ const UserProfile = () => {
         }
 
         const rawData = await response.json();
+        console.log(rawData);
         // Parse the body string into an object
         const parsedData = JSON.parse(rawData.body);
+        console.log(parsedData);
         // Now we can access the users array
         const userData = parsedData.users[0];
+        console.log(userData);
 
         const postCounts = await fetchPosts(targetUserId);
 
@@ -144,8 +151,22 @@ const UserProfile = () => {
     loadProfileData();
   }, [profileId]);
 
-  const updateBio = async (newBio) => {
 
+  const handleViewDetails = async (listing) => {
+    try {
+      setSelectedListing(listing);
+      setShowModal(true);
+    } catch (err) {
+      console.log('Error fetching user details:', err);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedListing(null);
+  };
+
+  const updateBio = async (newBio) => {
     const verifiedHeader = await getAuthHeaders();
     try {
 
@@ -529,7 +550,8 @@ const UserProfile = () => {
                       >
                         <div
                           className="flex-grow-1 cursor-pointer"
-                          onClick={() => navigate(`/marketplace/listing/${post.postsId}`)}
+                          onClick={() => handleViewDetails(post)}
+                          style={{ cursor: 'pointer' }}
                         >
                           <h6 className="mb-0">{post.title}</h6>
                           <small className="text-muted">
@@ -543,7 +565,7 @@ const UserProfile = () => {
                               variant="outline-danger"
                               size="sm"
                               onClick={(e) => {
-                                e.stopPropagation(); // Prevent navigation when clicking delete
+                                e.stopPropagation();
                                 if (window.confirm('Are you sure you want to delete this listing?')) {
                                   handleMarketplaceDelete(post.postsId);
                                 }
@@ -617,6 +639,66 @@ const UserProfile = () => {
           </Accordion>
         </Col>
       </Row>
+      {/* Modal for Detailed View */}
+<Modal
+  show={showModal}
+  onHide={handleCloseModal}
+  centered
+  size="lg"
+  fullscreen="md-down"
+>
+  <Modal.Header closeButton>
+    <Modal.Title>{selectedListing?.title}</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    {selectedListing && (
+      <>
+        <Image
+          src={selectedListing.images_url || '/placeholder.jpg'}
+          alt={selectedListing.title}
+          className="mb-3"
+          style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
+          rounded
+        />
+        <h5 className="text-muted">Description</h5>
+        <p>{selectedListing.product_description}</p>
+        <h5 className="text-muted">Price</h5>
+        <p>${selectedListing.product_price}</p>
+        {/* <div className="d-flex align-items-center mb-3 border-top pt-3">
+          {userDetails ? (
+            <div className="d-flex align-items-center">
+              {userDetails.image_url ? (
+                <Image
+                  src={userDetails.image_url}
+                  alt={userDetails.username}
+                  roundedCircle
+                  style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                  className="me-3"
+                />
+              ) : (
+                <PersonCircle
+                  size={50}
+                  className="me-3 text-muted"
+                  style={{ width: '50px', height: '50px' }}
+                />
+              )}
+              <div>
+                <p className="mb-1">
+                  <strong>{userDetails.username}</strong>
+                </p>
+                <p className="mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+                  {userDetails.email}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p>Loading user details...</p>
+          )}
+        </div> */}
+      </>
+    )}
+  </Modal.Body>
+</Modal>
     </Container>
   );
 };
