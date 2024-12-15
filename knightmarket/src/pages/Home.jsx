@@ -1,4 +1,5 @@
 import React from 'react';
+import rutgersKnight from '../assets/rutgersKnight.png';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Shop, ChatSquareText, Search, ArrowRight, Star } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
@@ -13,7 +14,8 @@ const Home = () => {
             <Col md={6} className="mb-4 mb-md-0">
               <h1 className="display-4 fw-bold mb-3">Welcome to KnightMarket</h1>
               <p className="lead mb-4">
-                Your one-stop marketplace for Rutgers students to buy, sell, and connect with fellow Knights.
+                Your one-stop marketplace for Rutgers students to <br />
+                buy, sell, and connect with fellow Knights.
               </p>
               <Button 
                 as={Link} 
@@ -39,9 +41,9 @@ const Home = () => {
             </Col>
             <Col md={6}>
               <img 
-                src="/api/placeholder/600/400"
-                alt="KnightMarket Preview"
-                className="img-fluid rounded shadow"
+                src={rutgersKnight} 
+                alt="KnightMarket Hero" 
+                className="img-fluid rounded shadow" 
               />
             </Col>
           </Row>

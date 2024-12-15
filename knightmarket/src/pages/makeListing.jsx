@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { uploadImage } from '../utils/imageUpload';
+import { getAuthHeaders } from '../utils/getJWT';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+import { fetchUserAttributes, getCurrentUser } from '@aws-amplify/auth';
+import { API_ENDPOINTS } from '../config/apis';
 
-function MakeListing({ addListing, userId }) {
+function MakeListing({ addListing }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -14,47 +17,24 @@ function MakeListing({ addListing, userId }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // const uploadImage = async (base64Image, fileName) => {
-  //   try {
-  //     const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/images', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         base64Image,
-  //         fileName,
-  //       }),
-  //     });
-  
-  //     if (!response.ok) {
-  //       throw new Error('Failed to upload image.');
-  //     }
-  
-  //     const result = await response.json();
-  //     console.log('Raw API Response:', result);
-
-  //     const imageUrls = JSON.parse(result.body).imageUrls;
-  //     return imageUrls[0]; // Assuming single image upload
-  //   } catch (err) {
-  //     console.error(err);
-  //     throw new Error('Image upload failed.');
-  //   }
-  // };
-
   const postListing = async (listingData) => {
+    const verifiedHeader = await getAuthHeaders();
     try {
-      const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/dev/marketplace', {
+      const response = await fetch(API_ENDPOINTS.MARKETPLACE_POSTS, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          credentials: 'username:password' // Replace with real credentials
-        },
-        body: JSON.stringify(listingData)
+        headers: verifiedHeader,
+        body: JSON.stringify({
+          user_id: listingData.user_id, // Pass user_id from database
+          title: listingData.title,
+          product_description: listingData.product_description,
+          product_price: listingData.product_price,
+          images_url: listingData.images_url || ''
+        })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to post listing.');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to post listing.');
       }
 
       return await response.json();
@@ -74,37 +54,47 @@ function MakeListing({ addListing, userId }) {
         throw new Error('Please upload an image.');
       }
 
+      const numericPrice = parseFloat(formData.price.replace(/[^0-9.]/g, ''));
+      if (formData.price === '' || isNaN(numericPrice)) {
+        throw new Error('Please enter a valid price.');
+      }
+
+      // Check if the price is negative
+      if (numericPrice < 0) {
+        throw new Error('Price cannot be negative.');
+      }
+
+      const userAttributes = await fetchUserAttributes();
+
       // Convert image to Base64
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64Image = reader.result.split(',')[1]; // Strip off the prefix
-        console.log('Base64 Image:', base64Image);
 
         try {
           // Upload image and get URL
           const imageUrl = await uploadImage(base64Image, `listing_${Date.now()}`);
           console.log('Image uploaded successfully:', imageUrl);
-          alert(`Image URL: ${imageUrl}`);
 
-          // // Prepare data for the listing
-          // const listingData = {
-          //   user_id: userId,
-          //   title: formData.title,
-          //   product_description: formData.description,
-          //   product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
-          //   images_url: imageUrl
-          // };
+          // Prepare data for the listing
+          const listingData = {
+            user_id: userAttributes.sub, 
+            title: formData.title,
+            product_description: formData.description,
+            product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
+            images_url: imageUrl
+          };
 
-          // // Post the listing
-          // const newListing = await postListing(listingData);
-          // console.log('Listing created successfully:', newListing);
+          // Post the listing
+          const newListing = await postListing(listingData);
+          console.log('Listing created successfully:', newListing);
 
-          // if (addListing) {
-          //   addListing(newListing);
-          // }
+          if (addListing) {
+            addListing(newListing);
+          }
 
-          // // Navigate back to the marketplace
-          // navigate('/marketplace');
+          // Navigate back to the marketplace
+          navigate('/marketplace');
         } catch (err) {
           setError(err.message);
         } finally {
@@ -123,19 +113,21 @@ function MakeListing({ addListing, userId }) {
     const { name, value } = e.target;
 
     if (name === 'price') {
-      const numericValue = value.replace(/[^0-9]/g, '');
-      const formattedValue = numericValue
-        ? `$${Number(numericValue).toLocaleString('en-US')}`
-        : '';
-      setFormData((prev) => ({
-        ...prev,
-        [name]: formattedValue
-      }));
+        // Allow only numbers and a single decimal point
+        const numericValue = value.replace(/[^0-9.]/g, ''); // Strip everything except numbers and '.'
+        const formattedValue = numericValue.match(/^\d*(\.\d{0,2})?$/) // Match up to 2 decimal places
+            ? `$${numericValue}`
+            : formData.price; // Keep the previous valid value if invalid input
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: formattedValue
+        }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value
-      }));
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
     }
   };
 
