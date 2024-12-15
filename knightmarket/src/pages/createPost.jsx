@@ -18,7 +18,7 @@ function CreatePost({ addPost }) {
 
   const createPost = async (postingData) =>{
     const verifiedHeader = await getAuthHeaders();
-    console.log(verifiedHeader);
+    console.log("Auth Headers:", verifiedHeader);
     try{
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum',{
         method: 'POST',
@@ -52,6 +52,7 @@ function CreatePost({ addPost }) {
       }
 
       const userAttributes = await fetchUserAttributes();
+      console.log("User Attributes:", userAttributes);
 
       // Convert image to Base64
       const reader = new FileReader();

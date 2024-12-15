@@ -18,7 +18,7 @@ function Forum() {
   // Fetch posts from API
   const fetchPosts = async () => {
     try {
-      const response = await axios.get('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum/',
+      const response = await axios.get('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/forum',
         {
           headers: {
             'Content-Type': 'application/json',
