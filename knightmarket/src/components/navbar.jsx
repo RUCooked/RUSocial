@@ -17,7 +17,7 @@ const NavigationBar = () => {
     };
 
     return (
-        <Navbar bg="danger" variant="dark" expand="lg" className="py-2">
+        <Navbar bg="danger" variant="dark" expand="lg" className="py-2 sticky-top">
             <Container>
                 {/* Logo and Brand */}
                 <div className="d-flex align-items-center">
