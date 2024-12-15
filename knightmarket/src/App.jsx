@@ -12,6 +12,7 @@ import Forum from './pages/Forum';
 import CreatePost from './pages/createPost';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
+import Messages from './pages/Messages';
 
 Amplify.configure(awsExports);
 
@@ -64,6 +65,15 @@ function AppLayout() {
               </RequireAuth>
             }
           />
+          <Route path="/Messages" element={<Messages />} />
+          { <Route
+            path="/directMessages"
+            element={
+              <RequireAuth>
+                <sendMessage />
+              </RequireAuth>
+            }
+          /> }
         </Routes>
       </main>
     </div>
