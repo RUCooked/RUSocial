@@ -179,7 +179,7 @@ const UserProfile = () => {
       const verifiedHeader = await getAuthHeaders();
 
       // Make delete request to marketplace API
-      const response = await fetch(`${API_ENDPOINTS.MARKETPLACE}`, {
+      const response = await fetch(`${API_ENDPOINTS.MARKETPLACE_POSTS}`, {
         method: 'DELETE',
         headers: verifiedHeader,
         body: JSON.stringify({
@@ -213,7 +213,7 @@ const UserProfile = () => {
     try {
       const verifiedHeader = await getAuthHeaders();
 
-      const response = await fetch(`${API_ENDPOINTS.FORUM}`, {
+      const response = await fetch(`${API_ENDPOINTS.FORUM_POSTS}`, {
         method: 'DELETE',
         headers: verifiedHeader,
         body: JSON.stringify({
@@ -244,7 +244,7 @@ const UserProfile = () => {
   const fetchPosts = async (userId) => {
     try {
       // get marketplace posts count
-      const marketplaceResponse = await fetch(`${API_ENDPOINTS.MARKETPLACE}?user_id=${userId}`,
+      const marketplaceResponse = await fetch(`${API_ENDPOINTS.MARKETPLACE_POSTS}?user_id=${userId}`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
@@ -252,7 +252,7 @@ const UserProfile = () => {
       );
 
       // get forum posts count
-      const forumResponse = await fetch(`${API_ENDPOINTS.FORUM}?user_id=${userId}`,
+      const forumResponse = await fetch(`${API_ENDPOINTS.FORUM_POSTS}?user_id=${userId}`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
