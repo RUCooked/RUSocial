@@ -71,7 +71,6 @@ function CreatePost({ addPost, userId }) {
             body: formData.body,
             images_url: imageUrl
           };
-
           // // Post the data
           const newPost = await createPostData(listingData);  // Changed from postData to createPostData
           console.log('Post created successfully:', newPost);
