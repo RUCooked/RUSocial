@@ -12,33 +12,38 @@ function MakeListing({ addListing }) {
     price: '',
     description: ''
   });
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]); // Updated to support multiple images
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const postListing = async (listingData) => {
     const verifiedHeader = await getAuthHeaders();
     try {
+      const requestBody = {
+        user_id: listingData.user_id,
+        title: listingData.title,
+        product_description: listingData.product_description,
+        product_price: listingData.product_price,
+        images_url: listingData.images_url || []
+      };
+  
+      console.log('Marketplace API Request Body:', requestBody);
+  
       const response = await fetch('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
         method: 'POST',
         headers: verifiedHeader,
-        body: JSON.stringify({
-          user_id: listingData.user_id, // Pass user_id from database
-          title: listingData.title,
-          product_description: listingData.product_description,
-          product_price: listingData.product_price,
-          images_url: listingData.images_url || ''
-        })
+        body: JSON.stringify(requestBody),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Marketplace API Error:', errorData);
         throw new Error(errorData.message || 'Failed to post listing.');
       }
-
+  
       return await response.json();
     } catch (err) {
-      console.error(err);
+      console.error('Error in postListing:', err);
       throw new Error('Failed to create listing.');
     }
   };
@@ -47,53 +52,60 @@ function MakeListing({ addListing }) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
-
+  
     try {
-      if (!image) {
-        throw new Error('Please upload an image.');
+      if (images.length === 0) {
+        throw new Error('Please upload at least one image.');
       }
-
+  
       const userAttributes = await fetchUserAttributes();
-
-      // Convert image to Base64
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Image = reader.result.split(',')[1]; // Strip off the prefix
-
-        try {
-          // Upload image and get URL
-          const imageUrl = await uploadImage(base64Image, `listing_${Date.now()}`);
-          console.log('Image uploaded successfully:', imageUrl);
-
-          // Prepare data for the listing
-          const listingData = {
-            user_id: userAttributes.sub, 
-            title: formData.title,
-            product_description: formData.description,
-            product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
-            images_url: imageUrl
+  
+      // Prepare the image data for upload
+      const imageArray = images.map((image) => {
+        const reader = new FileReader();
+  
+        return new Promise((resolve, reject) => {
+          reader.onloadend = () => {
+            const base64Image = reader.result.split(',')[1];
+            resolve({
+              base64Image,
+              fileName: `listing_${Date.now()}`,
+            });
           };
-
-          // Post the listing
-          const newListing = await postListing(listingData);
-          console.log('Listing created successfully:', newListing);
-
-          if (addListing) {
-            addListing(newListing);
-          }
-
-          // Navigate back to the marketplace
-          navigate('/marketplace');
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setIsSubmitting(false);
-        }
+          reader.onerror = reject;
+          reader.readAsDataURL(image);
+        });
+      });
+  
+      const preparedImages = await Promise.all(imageArray);
+  
+      // Upload images and get URLs
+      const uploadedImageUrls = await uploadImage(preparedImages);
+  
+      console.log('Uploaded Image URLs:', uploadedImageUrls);
+  
+      // Prepare listing data
+      const listingData = {
+        user_id: userAttributes.sub,
+        title: formData.title,
+        product_description: formData.description,
+        product_price: parseFloat(formData.price.replace(/[^0-9.]/g, '')),
+        images_url: uploadedImageUrls,
       };
-
-      reader.readAsDataURL(image);
+  
+      // Post the listing
+      const newListing = await postListing(listingData);
+      console.log('Listing created successfully:', newListing);
+  
+      if (addListing) {
+        addListing(newListing);
+      }
+  
+      navigate('/marketplace');
     } catch (err) {
       setError(err.message);
+      console.error(err);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -121,8 +133,20 @@ function MakeListing({ addListing }) {
   };
 
   const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+    const selectedFiles = Array.from(e.target.files);
+
+    if (selectedFiles.length + images.length > 10) {
+      setError('You can upload a maximum of 10 images.');
+      return;
+    }
+
+    setImages((prev) => [...prev, ...selectedFiles]);
   };
+
+  const removeImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
 
   return (
     <Container className="py-4">
@@ -168,18 +192,36 @@ function MakeListing({ addListing }) {
               />
             </Form.Group>
 
-            <Form.Group controlId="listingImage" className="mb-3">
-              <Form.Label>Upload Image:</Form.Label>
+            <Form.Group controlId="listingImages" className="mb-3">
+              <Form.Label>Upload Images</Form.Label>
               <Form.Control
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImageChange}
-                required
               />
+              <div className="mt-2">
+                {images.map((image, index) => (
+                  <div key={index} className="d-flex align-items-center mb-2">
+                    <span className="me-2">{image.name}</span>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => removeImage(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </Form.Group>
 
             <div className="d-flex gap-2 justify-content-end">
-              <Button variant="secondary" onClick={() => navigate('/marketplace')} disabled={isSubmitting}>
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/marketplace')}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button variant="primary" type="submit" disabled={isSubmitting}>
