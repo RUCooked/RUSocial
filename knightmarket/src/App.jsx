@@ -14,7 +14,6 @@ import Login from './pages/Login';
 import Userprofile from "./pages/Userprofile";
 import './App.css';
 import Settings from './pages/Settings';
-import Userprofile from "./pages/Userprofile";
 import './App.css';
 
 Amplify.configure(awsExports);
