@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { uploadImage } from '../utils/imageUpload';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-import { Auth } from 'aws-amplify';
+import { fetchUserAttributes, getCurrentUser } from '@aws-amplify/auth';
 
 async function getAuthHeaders() {
   try {
