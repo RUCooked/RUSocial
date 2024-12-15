@@ -61,7 +61,7 @@ function Forum() {
                     <h2 className="mb-2">Forum</h2>
                     <p className="text-muted">Join the conversation with fellow students</p>
                 </div>
-                {isAuthenticated (
+                {isAuthenticated &&(
                     <Button
                         as={Link}
                         to="/create-post"
