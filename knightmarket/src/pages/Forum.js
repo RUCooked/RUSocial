@@ -3,6 +3,10 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { Container, Card, Button, Badge } from 'react-bootstrap';
 import { PlusCircle, ChatLeftText } from 'react-bootstrap-icons';
+import { getAuthHeaders } from '../utils/getJWT';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 function Forum() {
   const [posts, setPosts] = useState([]);
