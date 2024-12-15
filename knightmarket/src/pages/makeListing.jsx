@@ -54,6 +54,16 @@ function MakeListing({ addListing }) {
         throw new Error('Please upload an image.');
       }
 
+      const numericPrice = parseFloat(formData.price.replace(/[^0-9.]/g, ''));
+      if (formData.price === '' || isNaN(numericPrice)) {
+        throw new Error('Please enter a valid price.');
+      }
+
+      // Check if the price is negative
+      if (numericPrice < 0) {
+        throw new Error('Price cannot be negative.');
+      }
+
       const userAttributes = await fetchUserAttributes();
 
       // Convert image to Base64
