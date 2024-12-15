@@ -11,6 +11,7 @@ import {
   PersonXFill,
   ArrowLeftShort,
 } from 'react-bootstrap-icons';
+import axios from 'axios';
 import { getCurrentUser, fetchUserAttributes } from '@aws-amplify/auth';
 import { getAuthHeaders } from '../utils/getJWT';
 import { uploadImage } from '../utils/imageUpload';
@@ -44,8 +45,14 @@ function Settings() {
       setEmail(attributes.email || 'No email available');
       setCurrentUserId(userId);
 
+      const userResponse = await axios.get(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?id=${userId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const parsedUser = JSON.parse(userResponse.data.body);
       // Fetch profile picture
-      const imageUrl = attributes.ima || null; // Assuming `picture` is the key for the profile picture URL
+      const imageUrl = parsedUser.users[0].image_url || null; // Assuming `picture` is the key for the profile picture URL
       setProfilePicture(imageUrl);
 
       // Fetch blocked users
@@ -270,7 +277,7 @@ function Settings() {
               <Form.Label className="d-flex align-items-center">
                 <PersonFill className="text-danger me-2" /> Username
               </Form.Label>
-              <Form.Control type="text" value={username} readOnly className="bg-light" />
+              <Form.Control type="text" value={username} disabled readOnly className="bg-light" />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label className="d-flex align-items-center">
@@ -280,10 +287,10 @@ function Settings() {
                 <Image
                   src={profilePicture}
                   roundedCircle
-                  width={80}
-                  height={80}
+                  style={{ width: '100px', height: '100px', objectFit: 'cover' }}
                   className="mb-3"
                 />
+                
               ) : (
                 <div className="mb-3">No profile picture uploaded</div>
               )}
@@ -303,7 +310,7 @@ function Settings() {
           </Form>
         </Card.Body>
       </Card>
-  
+
       <Card className="shadow-sm">
         <Card.Header className="bg-white">
           <h2 className="h5 mb-0 d-flex align-items-center text-danger">
