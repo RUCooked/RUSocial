@@ -26,10 +26,11 @@ function Marketplace() {
 
   // Fetch Listings
   const fetchListings = async () => {
-    const verifiedHeader = await getAuthHeaders();
     try {
       const response = await axios.get('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
-        headers: verifiedHeader,
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       const parsedBody = JSON.parse(response.data.body);
@@ -169,7 +170,7 @@ function Marketplace() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: '#f0f0f0', 
+                          backgroundColor: '#f0f0f0',
                           color: '#7a7a7a',
                           fontSize: '16px',
                           textAlign: 'center',
@@ -221,13 +222,13 @@ function Marketplace() {
       )}
 
       {/* Modal for Detailed View */}
-      <Modal 
-        show={showModal} 
-        onHide={handleCloseModal} 
+      <Modal
+        show={showModal}
+        onHide={handleCloseModal}
         centered
         size="lg" // Makes the modal wider
         fullscreen="md-down"
-        >
+      >
         <Modal.Header closeButton>
           <Modal.Title>{selectedListing?.title}</Modal.Title>
         </Modal.Header>
@@ -260,7 +261,7 @@ function Marketplace() {
           )}
         </Modal.Body>
       </Modal>
-      
+
       {/* Offcanvas for Filters */}
       <Offcanvas show={showOffcanvas} onHide={() => setShowOffcanvas(false)} placement="start">
         <Offcanvas.Header closeButton>
