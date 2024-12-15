@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Row, Col, Form, Button, ListGroup, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Spinner } from 'react-bootstrap';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-function DirectMessages({ user1, user2, onReturnToMessages }) {
+function DirectMessage() {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, otherUser } = state || {};
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Fetch messages from the JSON file using get_messages.js
   const fetchMessages = async () => {
     setLoading(true);
     setError('');
@@ -15,84 +20,124 @@ function DirectMessages({ user1, user2, onReturnToMessages }) {
       const response = await axios.get(
         'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/messages',
         {
-          params: { user1, user2 },
+          params: { user1: currentUser, user2: otherUser },
         }
       );
-      setMessages(response.data.messages || []);
+
+      console.log('API Response:', response.data);
+
+      // Ensure `body` is parsed correctly
+      const responseBody = JSON.parse(response.data.body || '{}');
+      const conversation = responseBody.messages || [];
+      setMessages(conversation);
     } catch (err) {
-      setError('Failed to fetch messages. Please try again later.');
+      console.error('Error fetching messages:', err.message);
+      setError('Failed to fetch messages. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Send a new message and update the JSON file using post_messages.js
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
-    const newMsg = {
-      user1,
-      user2,
-      message: newMessage,
-      timestamp: new Date().toISOString(),
-    };
-
     try {
-      await axios.post('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/messages', newMsg);
-      setMessages((prevMessages) => [...prevMessages, { ...newMsg, sender: user1 }]);
+      const newMessageData = {
+        user1: currentUser,
+        user2: otherUser,
+        message: newMessage,
+      };
+
+      // POST request to the API
+      const response = await axios.post(
+        'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/messages',
+        JSON.stringify(newMessageData),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      console.log('Message sent:', response.data);
+
+      // Update the local state to reflect the new message
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { sender: currentUser, content: newMessage, timestamp: new Date().toISOString() },
+      ]);
       setNewMessage('');
     } catch (err) {
+      console.error('Error sending message:', err.message);
       setError('Failed to send message. Please try again.');
     }
   };
 
   useEffect(() => {
-    fetchMessages();
-  }, [user1, user2]);
+    if (currentUser && otherUser) {
+      fetchMessages();
+    } else {
+      setError('Invalid user information.');
+    }
+  }, [currentUser, otherUser]);
 
   return (
-    <Container className="mt-4">
-      <Row>
+    <Container>
+      <Row className="my-4">
         <Col>
-          <Button variant="secondary" onClick={onReturnToMessages} className="mb-3">
+          <Button variant="secondary" onClick={() => navigate(-1)}>
             Return to Messages
           </Button>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <h4>Conversation between {user1} and {user2}</h4>
-          {loading && <p>Loading messages...</p>}
+          <h2>Conversation with {otherUser || 'Unknown User'}</h2>
+
+          {loading && <Spinner animation="border" variant="primary" />}
           {error && <p className="text-danger">{error}</p>}
-          <ListGroup>
-            {messages.map((msg, idx) => (
-              <ListGroup.Item key={idx}>
-                <div>
-                  <strong>{msg.sender === user1 ? 'You' : user2}</strong>:
-                </div>
-                <div>{msg.message}</div>
-                <div className="text-muted small">{new Date(msg.timestamp).toLocaleString()}</div>
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        </Col>
-      </Row>
-      <Row className="mt-4">
-        <Col>
-          <InputGroup>
-            <Form.Control
-              type="text"
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-            />
-            <Button variant="primary" onClick={sendMessage}>
+
+          {/* Display Messages */}
+          {!loading && !error && Array.isArray(messages) && messages.length > 0 && (
+            <div>
+              {messages.map((msg, index) => (
+                <Card key={index} className="mb-2">
+                  <Card.Body>
+                    <strong>{msg.sender}</strong>: {msg.content}
+                    <div className="text-muted small">
+                      {new Date(msg.timestamp).toLocaleString()}
+                    </div>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* No Messages */}
+          {!loading && !error && messages.length === 0 && (
+            <p className="text-muted">No messages yet. Start the conversation!</p>
+          )}
+
+          {/* Message Input Form */}
+          <Form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendMessage();
+            }}
+          >
+            <Form.Group controlId="messageInput" className="my-3">
+              <Form.Control
+                type="text"
+                placeholder="Type your message here..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+              />
+            </Form.Group>
+            <Button type="submit" variant="primary">
               Send
             </Button>
-          </InputGroup>
+          </Form>
         </Col>
       </Row>
     </Container>
   );
 }
 
-export default DirectMessages;
+export default DirectMessage;

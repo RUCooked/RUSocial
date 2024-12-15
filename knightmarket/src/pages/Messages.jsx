@@ -60,7 +60,7 @@ function Messages({ currentUser }) {
                     <Button
                       variant="primary"
                       onClick={() =>
-                        navigate('/directmessage', {
+                        navigate('/DirectMessages', {
                           state: { currentUser, otherUser: conversation.otherUser },
                         })
                       }
