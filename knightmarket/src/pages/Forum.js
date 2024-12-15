@@ -13,17 +13,13 @@ function Forum() {
   // Fetch posts from API
   useEffect(() => {
     const fetchPosts = async () => {
+      const verifiedHeader = await getAuthHeaders();
       try {
-        const response = await fetch(
+        const response = await axios.get(
           'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/no-auth/forum/',
           {
-            method: 'GET',
-            headers: {
-              'credentials': 'masterknight:chickenNugget452!',
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+            headers: verifiedHeader,
+          });
   
         if (!response.ok) {
           throw new Error('Failed to fetch posts');
