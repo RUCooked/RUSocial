@@ -4,9 +4,10 @@ import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, Modal, Image, Offcanvas, Form } from 'react-bootstrap';
 import { PlusCircle, PersonCircle, Funnel } from 'react-bootstrap-icons';
 import { getAuthHeaders } from '../utils/getJWT';
+import { getCurrentUser } from '@aws-amplify/auth';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
+import { API_ENDPOINTS } from '../config/apis';
 
 function Marketplace() {
   const [listings, setListings] = useState([]);
@@ -16,26 +17,58 @@ function Marketplace() {
   const [showModal, setShowModal] = useState(false); // Controls modal visibility
   const [showOffcanvas, setShowOffcanvas] = useState(false); // Controls offcanvas visibility
   const [selectedListing, setSelectedListing] = useState(null); // Stores the selected listing details
+  const [userDetails, setUserDetails] = useState(null); 
   const [startDate, setStartDate] = useState(null); // Start date for filtering
   const [endDate, setEndDate] = useState(null);
+  const [blockedUsers, setBlockedUsers] = useState([]);
 
   const [priceRange, setPriceRange] = useState({
     minPrice: '',
     maxPrice: ''
   });
 
+  const fetchBlockedUsers = async () => {
+    try {
+      const user = await getCurrentUser(); // Get the current user
+      const username = user.username;
+  
+      // Call the provided endpoint to fetch the blocked users
+      const response = await axios.get(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user`, {
+        params: { username }, // Pass the username as a query string parameter
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      // Parse and set blocked users
+      const userData = JSON.parse(response.data.body);
+  
+      if (userData.users && userData.users.length > 0) {
+        setBlockedUsers(userData.users[0].blocked_ids || []);
+      } else {
+        console.warn('No blocked users found for this user.');
+        setBlockedUsers([]); // Set to an empty array if no blocked users are found
+      }
+    } catch (err) {
+      console.error('Error fetching blocked users:', err);
+      setBlockedUsers([]); // Set to an empty array on error to avoid breaking the app
+    }
+  };
+
   // Fetch Listings
   const fetchListings = async () => {
-    const verifiedHeader = await getAuthHeaders();
     try {
-      const response = await axios.get('https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/marketplace', {
-        headers: verifiedHeader,
+      const response = await axios.get(API_ENDPOINTS.MARKETPLACE_GET, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       const parsedBody = JSON.parse(response.data.body);
 
       const apiListings = parsedBody.map(post => ({
         id: post.postsId,
+        user: post.user_id,
         title: post.title,
         description: post.product_description,
         images: post.images_url || [],
@@ -55,17 +88,69 @@ function Marketplace() {
   };
 
   useEffect(() => {
-    fetchListings();
+    if (blockedUsers.length > 0) {
+      const filtered = listings.filter(
+        (listing) => !blockedUsers.includes(listing.user)
+      );
+      setFilteredListings(filtered);
+    } else {
+      setFilteredListings(listings); // If no blocked users, show all listings
+    }
+  }, [blockedUsers, listings]);
+
+  // Fetch blocked users and listings on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      await fetchBlockedUsers();
+      await fetchListings();
+    };
+
+    fetchData();
   }, []);
 
-  const handleViewDetails = (listing) => {
-    setSelectedListing(listing); // Set the selected listing
-    setShowModal(true); // Show the modal
-  };
+  const handleViewDetails = async (listing) => {
+    try {
+        setSelectedListing(listing);
+        setShowModal(true);
+
+        console.log('Fetching user details for user_id:', listing.user);
+
+        // Fetch user details using the user's ID
+        const userResponse = await axios.get(`https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/user?id=${listing.user}`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const parsedUser = JSON.parse(userResponse.data.body);
+        console.log('Parsed User:', parsedUser);
+
+        // Check if users array exists and has entries
+        if (parsedUser.users && Array.isArray(parsedUser.users) && parsedUser.users.length > 0) {
+            const userInfo = parsedUser.users.map(user => ({
+                userid: user.id,
+                username: user.username,
+                email: user.email,
+                image_url: user.image_url,
+            }));
+            console.log('Formatted User Info:', userInfo);
+
+            setUserDetails(userInfo[0]); // Use the first user from the array
+        } else {
+            console.warn('Users array is not present or is empty');
+            setUserDetails(null); // Reset user details if no valid data is returned
+        }
+    } catch (err) {
+        console.error('Error fetching user details:', err);
+        setUserDetails(null); // Reset user details on error
+    }
+};
 
   const handleCloseModal = () => {
-    setShowModal(false); // Hide the modal
-    setSelectedListing(null); // Clear the selected listing
+    setShowModal(false);
+    setSelectedListing(null);
+    setUserDetails(null); // Clear user details when modal is closed
   };
 
   const handleShowOffcanvas = () => setShowOffcanvas(true);
@@ -169,7 +254,7 @@ function Marketplace() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: '#f0f0f0', 
+                          backgroundColor: '#f0f0f0',
                           color: '#7a7a7a',
                           fontSize: '16px',
                           textAlign: 'center',
@@ -187,7 +272,11 @@ function Marketplace() {
                       </Card.Title>
                       <Card.Text
                         className="text-truncate"
-                        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
                         title={listing.description}
                       >
                         {listing.description}
@@ -205,7 +294,8 @@ function Marketplace() {
                     </Card.Body>
                     <Card.Footer>
                       <small className="text-muted">
-                        Posted on {new Date(listing.datePosted).toLocaleDateString()}
+                        Posted on{' '}
+                        {new Date(listing.datePosted).toLocaleDateString()}
                       </small>
                     </Card.Footer>
                   </Card>
@@ -220,47 +310,77 @@ function Marketplace() {
         </>
       )}
 
+
       {/* Modal for Detailed View */}
-      <Modal 
-        show={showModal} 
-        onHide={handleCloseModal} 
+      <Modal
+        show={showModal}
+        onHide={handleCloseModal}
         centered
-        size="lg" // Makes the modal wider
+        size="lg"
         fullscreen="md-down"
-        >
+      >
         <Modal.Header closeButton>
           <Modal.Title>{selectedListing?.title}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {selectedListing && (
-            <>
-              <Image
-                src={selectedListing.images[0] || '/placeholder.jpg'}
-                alt={selectedListing.title}
-                className="mb-3"
-                style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
-                rounded
-              />
-              <h5 className="text-muted">Description</h5>
-              <p>{selectedListing.description}</p>
-              <h5 className="text-muted">Price</h5>
-              <p>${selectedListing.price}</p>
-              <div className="d-flex align-items-center mb-3">
-                <PersonCircle
-                  size={50} // Set the size to match the original profile picture size
-                  className="me-2" // Add some margin to the right for spacing
-                  style={{ color: '#6c757d' }} // Optional: Adjust color to match your design
-                />
-                <div>
-                  <p className="mb-0"><strong>User Name</strong></p> {/* Placeholder for user name */}
-                  <Button variant="primary" size="sm">Message User</Button>
-                </div>
-              </div>
-            </>
-          )}
+          <Modal.Body>
+            {selectedListing && (
+                <>
+                    <Image
+                      src={
+                        selectedListing.images[0] || // Listing image takes priority
+                        userDetails?.image_url ||    // User profile picture as a fallback
+                        '/placeholder.jpg'           // Default placeholder
+                      }
+                      alt={selectedListing.title}
+                      className="mb-3"
+                      style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
+                      rounded
+                    />
+                    <h5 className="text-muted">Description</h5>
+                    <p>{selectedListing.description}</p>
+                    <h5 className="text-muted">Price</h5>
+                    <p>${selectedListing.price}</p>
+                    <div className="d-flex align-items-center mb-3 border-top pt-3">
+                        {userDetails ? (
+                          <div className="d-flex align-items-center justify-content-between w-100">
+                            <div className="d-flex align-items-center">
+                                {userDetails.image_url ? (
+                                    <Image
+                                        src={userDetails.image_url}
+                                        alt={userDetails.username}
+                                        roundedCircle
+                                        style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                        className="me-3"
+                                    />
+                                ) : (
+                                    <PersonCircle
+                                        size={50}
+                                        className="me-3 text-muted"
+                                        style={{ width: '50px', height: '50px' }}
+                                    />
+                                )}
+                                <div>
+                                    <p className="mb-1">
+                                        <strong>{userDetails.username}</strong>
+                                    </p>
+                                    <p className="mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+                                        {userDetails.email}
+                                    </p>
+                                </div>
+                            </div>
+                            <Button variant="primary" size="md" className="ms-auto">
+                                Message User
+                            </Button>
+                          </div>
+                        ) : (
+                            <p>Loading user details...</p>
+                        )}
+                    </div>
+                </>
+            )}
         </Modal.Body>
       </Modal>
-      
+
       {/* Offcanvas for Filters */}
       <Offcanvas show={showOffcanvas} onHide={() => setShowOffcanvas(false)} placement="start">
         <Offcanvas.Header closeButton>
