@@ -50,6 +50,8 @@ function DirectMessage() {
       };
 
       // POST request to the API
+      console.log(JSON.stringify(newMessageData));
+
       const response = await axios.post(
         'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/messages',
         JSON.stringify(newMessageData),
