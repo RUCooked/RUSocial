@@ -79,36 +79,39 @@ const FollowListModal = ({ show, onHide, type, userId }) => {
       
       try {
         setIsLoading(true);
-        const response = await fetch(`${API_ENDPOINTS.USERS}?id=${userId}&${type}=true`, {
+        const queryParam = type === 'followers' ? 'followers=id' : 'following=id';
+        const response = await fetch(`${API_ENDPOINTS.USERS}?id=${userId}&${queryParam}`, {
           headers: { 'Content-Type': 'application/json' }
         });
-
+        
         if (!response.ok) {
           throw new Error('Failed to fetch users');
         }
-
+        
         const data = await response.json();
         const parsedData = JSON.parse(data.body);
+
+        const userList = parsedData.users || [];
         
-        // Get the appropriate list based on type
-        const userIds = type === 'followers' ? 
-          parsedData.users[0].follower_ids : 
-          parsedData.users[0].following_ids;
+        // // Get the appropriate list based on type
+        // const userIds = type === 'followers' ? 
+        //   parsedData.users[0].follower_ids : 
+        //   parsedData.users[0].following_ids;
 
-        // Fetch details for each user
-        const userDetailsPromises = userIds.map(id =>
-          fetch(`${API_ENDPOINTS.USERS}?id=${id}`, {
-            headers: { 'Content-Type': 'application/json' }
-          }).then(res => res.json())
-        );
+        // // Fetch details for each user
+        // const userDetailsPromises = userIds.map(id =>
+        //   fetch(`${API_ENDPOINTS.USERS}?id=${id}`, {
+        //     headers: { 'Content-Type': 'application/json' }
+        //   }).then(res => res.json())
+        // );
 
-        const userDetails = await Promise.all(userDetailsPromises);
-        const processedUsers = userDetails.map(detail => {
-          const parsed = JSON.parse(detail.body);
-          return parsed.users[0];
-        });
+        // const userDetails = await Promise.all(userDetailsPromises);
+        // const processedUsers = userDetails.map(detail => {
+        //   const parsed = JSON.parse(detail.body);
+        //   return parsed.users[0];
+        // });
 
-        setUsers(processedUsers);
+        setUsers(userList);
       } catch (error) {
         console.error('Error fetching users:', error);
       } finally {
@@ -654,11 +657,23 @@ const UserProfile = () => {
                   <h5 className="mb-0">{profileData.stats?.posts || 0}</h5>
                   <small className="text-muted">Posts</small>
                 </div>
-                <div className="text-center">
+                <div className="text-center"
+                onClick={() => {
+                  setFollowModalType('followers');
+                  setShowFollowModal(true);
+                }}
+                style={{ cursor: 'pointer' }}
+                >
+
                   <h5 className="mb-0">{profileData.stats?.followers || 0}</h5>
                   <small className="text-muted">Followers</small>
                 </div>
-                <div className="text-center">
+                <div className="text-center"
+                onClick={() => {
+                  setFollowModalType('following');
+                  setShowFollowModal(true);
+                }}
+                style={{ cursor: 'pointer' }}>
                   <h5 className="mb-0">{profileData.stats?.following || 0}</h5>
                   <small className="text-muted">Following</small>
                 </div>
@@ -883,6 +898,12 @@ const UserProfile = () => {
           )}
         </Modal.Body>
       </Modal>
+      <FollowListModal
+        show={showFollowModal}
+        onHide={() => setShowFollowModal(false)}
+        type={followModalType}
+        userId={profileData?.userId}
+      />
     </Container>
   );
 };

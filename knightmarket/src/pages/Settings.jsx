@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, ListGroup, Image, Spinner, Alert } from 'react-bootstrap';
 import {
   PersonFill,
-  LockFill,
   EnvelopeFill,
   CameraFill,
   TrashFill,

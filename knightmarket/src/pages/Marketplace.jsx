@@ -3,7 +3,6 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, Modal, Image, Offcanvas, Form } from 'react-bootstrap';
 import { PlusCircle, PersonCircle, Funnel } from 'react-bootstrap-icons';
-import { getAuthHeaders } from '../utils/getJWT';
 import { getCurrentUser } from '@aws-amplify/auth';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -161,7 +160,6 @@ function Marketplace() {
   };
 
   const handleShowOffcanvas = () => setShowOffcanvas(true);
-  const handleCloseOffcanvas = () => setShowOffcanvas(false);
 
   // Handle price range change with formatting
   const handleFilterChange = (e) => {
