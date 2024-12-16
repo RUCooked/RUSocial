@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Card, Button } from 'react-bootstrap';
+import { Container, Card, Button, Modal } from 'react-bootstrap';
 import { PlusCircle } from 'react-bootstrap-icons';
 import { getAuthHeaders } from '../utils/getJWT';
-
 
 function Forum() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); // State for the selected image
 
   const isAuthorized = true; // Mock authorization check
 
@@ -26,16 +26,16 @@ function Forum() {
             },
           }
         );
-  
+
         if (!response.ok) {
           throw new Error('Failed to fetch posts');
         }
-  
+
         const data = await response.json();
-  
+
         // Log the full response to verify structure
         console.log('Full API Response:', data.body);
-  
+
         // Parse the `body` key if it exists and set the posts
         const parsedBody = JSON.parse(data.body);
         setPosts(parsedBody.posts || []); // Use `posts` array from parsed `body`
@@ -45,9 +45,19 @@ function Forum() {
         setLoading(false);
       }
     };
-  
+
     fetchPosts();
   }, []);
+
+  // Function to handle image click
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+  };
+
+  // Function to close the modal
+  const handleCloseModal = () => {
+    setSelectedImage(null);
+  };
 
   return (
     <Container className="py-4">
@@ -55,7 +65,7 @@ function Forum() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="mb-2">Forum</h2>
-          <p className="text-muted">Join the conversation with fellow students</p>
+          <p className="text-muted">Share your thoughts, experiences, and ideas anonymously!</p>
         </div>
         {isAuthorized && (
           <Button
@@ -78,33 +88,76 @@ function Forum() {
       {!loading && !error && posts.length > 0 ? (
         <div className="d-flex flex-wrap gap-3">
           {posts.map((post) => (
-            console.log("this is an image" + post.image_url),
-            <Card key={post.id} className="shadow-sm" style={{ width: '18rem' }}>
+            <Card
+              key={post.id}
+              className="shadow-sm"
+              style={{
+                width: '18rem',
+                height: '22rem',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
               <Card.Body>
-                {/* Display the post image from the image_url */}
+                {/* Display the post image with consistent size */}
                 {post.image_url && (
-                  <img
-                    src={post.image_url} // Use the correct image URL
-                    alt={post.title}
-                    className="img-fluid mb-3"
-                    style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
-                  />
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '10rem',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <img
+                      src={post.image_url}
+                      alt={post.title}
+                      className="img-fluid"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'opacity 0.3s ease',
+                      }}
+                      onClick={() => handleImageClick(post.image_url)} // Open modal on click
+                    />
+                    {/* Overlay for hover effect */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        color: '#fff',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => handleImageClick(post.image_url)} // Open modal on click
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = 1; // Show overlay on hover
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = 0; // Hide overlay on leave
+                      }}
+                    >
+                      Enlarge Image
+                    </div>
+                  </div>
                 )}
-                
-                <Card.Title>{post.title}</Card.Title>
+
+                <Card.Title className="mt-3">{post.title}</Card.Title>
                 <Card.Text>
                   {post.body.length > 100
                     ? `${post.body.slice(0, 100)}...`
                     : post.body}
                 </Card.Text>
-                <Button
-                  variant="outline-primary"
-                  as={Link}
-                  to={`/post/${post.id}`}
-                  size="sm"
-                >
-                  Read More
-                </Button>
               </Card.Body>
             </Card>
           ))}
@@ -112,6 +165,20 @@ function Forum() {
       ) : (
         !loading && <p>No posts available.</p>
       )}
+
+      {/* Image Modal */}
+      <Modal show={!!selectedImage} onHide={handleCloseModal} centered>
+        <Modal.Body>
+          {selectedImage && (
+            <img
+              src={selectedImage}
+              alt="Full View"
+              className="img-fluid"
+              style={{ width: '100%', height: 'auto', objectFit: 'contain' }}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 }
