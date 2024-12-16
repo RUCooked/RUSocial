@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Card, ListGroup, Image, Spinner, Alert } from 'react-bootstrap';
 import {
   PersonFill,
-  LockFill,
   EnvelopeFill,
   CameraFill,
   TrashFill,
@@ -53,7 +52,7 @@ function Settings() {
       const parsedUser = JSON.parse(userResponse.data.body);
 
       const userData = parsedUser.users[0]
-      const imageUrl = userData.image_url || null; // Assuming `picture` is the key for the profile picture URL
+      const imageUrl = userData.image_url || null; 
       setProfilePicture(imageUrl);
 
 

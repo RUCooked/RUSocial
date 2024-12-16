@@ -11,6 +11,7 @@ import {
   Form,
   Image,
   ListGroup,
+  Modal,
   Spinner
 } from 'react-bootstrap';
 import {
@@ -20,7 +21,8 @@ import {
   ShieldFill,
   Shop,
   ChatSquareText,
-  PencilSquare
+  PencilSquare,
+  ArrowLeftShort
 } from 'react-bootstrap-icons';
 import { getCurrentUser } from '@aws-amplify/auth';
 import { getAuthHeaders } from '../utils/getJWT';
@@ -66,34 +68,115 @@ const EditableBio = ({ bio, onSave }) => {
   );
 };
 
+const FollowListModal = ({ show, onHide, type, userId }) => {
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!show) return;
+
+      try {
+        setIsLoading(true);
+        const queryParam = type === 'followers' ? 'followers=id' : 'following=id';
+        const response = await fetch(`${API_ENDPOINTS.USERS}?id=${userId}&${queryParam}`, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+
+        const data = await response.json();
+        const parsedData = JSON.parse(data.body);
+
+        const userList = parsedData.users || [];
+
+        setUsers(userList);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [show, userId, type]);
+
+  return (
+    <Modal show={show} onHide={onHide} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>{type.charAt(0).toUpperCase() + type.slice(1)}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {isLoading ? (
+          <div className="text-center py-4">
+            <Spinner animation="border" variant="danger" />
+          </div>
+        ) : (
+          <ListGroup>
+            {users.length > 0 ? (
+              users.map(user => (
+                <ListGroup.Item
+                  key={user.id}
+                  action
+                  onClick={() => {
+                    onHide();
+                    navigate(`/profile/${user.id}`);
+                  }}
+                  className="d-flex align-items-center gap-3"
+                >
+                  <Image
+                    src={user.image_url || "/api/placeholder/40/40"}
+                    roundedCircle
+                    style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                  />
+                  <div>
+                    <strong>{user.username}</strong>
+                    <div className="text-muted small">@{user.email}</div>
+                  </div>
+                </ListGroup.Item>
+              ))
+            ) : (
+              <ListGroup.Item className="text-center text-muted">
+                No {type} yet
+              </ListGroup.Item>
+            )}
+          </ListGroup>
+        )}
+      </Modal.Body>
+    </Modal>
+  );
+};
+
 const UserProfile = () => {
-  // Get userId from URL parameters for viewing other profiles
   const { userId: profileId } = useParams();
   const navigate = useNavigate();
 
-  // State management for all profile data and UI states
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [followModalType, setFollowModalType] = useState('followers');
 
-  // Load profile data when component mounts or when profileId changes
+
   useEffect(() => {
     const loadProfileData = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Get current user info
         const loggedInUser = await getCurrentUser();
         setCurrentUser(loggedInUser);
 
-        // Determine which profile to load
         const targetUserId = profileId || loggedInUser.userId;
         setIsOwnProfile(!profileId || profileId === loggedInUser.userId);
 
-        // Fetch profile data
         const response = await fetch(`${API_ENDPOINTS.USERS}?id=${targetUserId}`, {
           headers: {
             'Content-Type': 'application/json',
@@ -105,14 +188,29 @@ const UserProfile = () => {
         }
 
         const rawData = await response.json();
+        console.log(rawData);
         // Parse the body string into an object
         const parsedData = JSON.parse(rawData.body);
-        // Now we can access the users array
+        console.log(parsedData);
+
+        if (!parsedData.users || parsedData.users.length === 0) {
+          setError('User not found');
+          return;
+        }
+
+        // now we can access the users array
         const userData = parsedData.users[0];
+        console.log(userData);
 
         const postCounts = await fetchPosts(targetUserId);
 
-        // Transform the data to match our component's expected structure
+        const blockCount = userData.blocked_ids.length;
+
+        const isFollowing = !isOwnProfile ?
+          await checkFollowStatus(targetUserId, loggedInUser.userId) :
+          false;
+
+        // transform the data to match our component's expected structure
         const transformedData = {
           username: userData.username,
           email: userData.email,
@@ -120,12 +218,13 @@ const UserProfile = () => {
           profilePicture: userData.image_url || "/api/placeholder/150/150",
           userId: userData.id,
           createdAt: userData.created_at,
+          isFollowing: isFollowing,
           stats: {
             followers: userData.followers || 0,
             following: userData.following || 0,
             marketplacePosts: postCounts.marketplaceCount || 0,
             forumPosts: postCounts.forumCount || 0,
-            blockedUsers: 0,
+            blockedUsers: blockCount || 0,
             posts: postCounts.totalPosts || 0,
             marketplaceData: postCounts.marketplaceData,
             forumData: postCounts.forumData
@@ -144,8 +243,86 @@ const UserProfile = () => {
     loadProfileData();
   }, [profileId]);
 
-  const updateBio = async (newBio) => {
+  useEffect(() => {
+    const checkBlockedStatus = async () => {
+      if (profileId) {
+        try {
+          const currentUser = await getCurrentUser();
+          const userResponse = await fetch(`${API_ENDPOINTS.USERS}?id=${currentUser.userId}`);
+          const userData = await userResponse.json();
+          const parsedData = JSON.parse(userData.body);
 
+          if (!parsedData.users || !parsedData.users[0]) {
+            console.error('Could not fetch current user data');
+            return;
+          }
+
+          const blockedIds = parsedData.users[0].blocked_ids || [];
+
+          if (blockedIds.includes(profileId)) {
+            setError("You cannot view this user's profile");
+            navigate(-1);
+          }
+        } catch (error) {
+          console.error('Error checking blocked status:', error);
+        }
+      }
+    };
+
+    checkBlockedStatus();
+  }, [profileId, navigate]);
+
+
+  const checkFollowStatus = async (targetUserId, currentUserId) => {
+    try {
+      const response = await fetch(
+        `${API_ENDPOINTS.USERS}?id=${targetUserId}&follower_id=${currentUserId}`,
+        {
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to check follow status');
+      }
+
+      const data = await response.json();
+      const parsedData = JSON.parse(data.body);
+
+      if (parsedData.users && parsedData.users[0]) {
+        const followerIds = parsedData.users[0].follower_ids;
+        return followerIds.includes(currentUserId);
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      return false;
+    }
+  };
+
+  const handleViewDetails = async (listing) => {
+    try {
+      setSelectedListing(listing);
+      setShowModal(true);
+    } catch (err) {
+      console.log('Error fetching user details:', err);
+    }
+  };
+
+  const handleBack = () => {
+    if (document.referrer.includes('/marketplace')) {
+      navigate('/marketplace');
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedListing(null);
+  };
+
+  const updateBio = async (newBio) => {
     const verifiedHeader = await getAuthHeaders();
     try {
 
@@ -172,13 +349,11 @@ const UserProfile = () => {
     }
   };
 
-  // Add these functions to your UserProfile component
   const handleMarketplaceDelete = async (postId) => {
     try {
       // Get authentication headers
       const verifiedHeader = await getAuthHeaders();
 
-      // Make delete request to marketplace API
       const response = await fetch(`${API_ENDPOINTS.MARKETPLACE_POSTS}`, {
         method: 'DELETE',
         headers: verifiedHeader,
@@ -191,8 +366,6 @@ const UserProfile = () => {
         throw new Error('Failed to delete marketplace post');
       }
 
-      // If deletion was successful, update the local state
-      // We'll filter out the deleted post from our current data
       setProfileData(prevData => ({
         ...prevData,
         stats: {
@@ -205,7 +378,6 @@ const UserProfile = () => {
 
     } catch (error) {
       console.error('Error deleting marketplace post:', error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -275,12 +447,10 @@ const UserProfile = () => {
       // For marketplace posts
       if (marketplaceRawData.body) {
         try {
-          // If body is a string, parse it
           const parsedMarketplace = typeof marketplaceRawData.body === 'string'
             ? JSON.parse(marketplaceRawData.body)
             : marketplaceRawData.body;
 
-          // Now we can safely use the data
           marketplacePosts = Array.isArray(parsedMarketplace)
             ? parsedMarketplace.filter(post => post.user_id === userId)
             : [];
@@ -289,15 +459,12 @@ const UserProfile = () => {
         }
       }
 
-      // For forum posts
       if (forumRawData.body) {
         try {
-          // If body is a string, parse it
           const parsedForum = typeof forumRawData.body === 'string'
             ? JSON.parse(forumRawData.body)
             : forumRawData.body;
 
-          // Now we can safely use the data
           forumPosts = Array.isArray(parsedForum)
             ? parsedForum.filter(post => post.user_id === userId)
             : [];
@@ -305,10 +472,6 @@ const UserProfile = () => {
           console.error('Error parsing forum data:', e);
         }
       }
-
-      // Log the processed data
-      console.log('Processed marketplace posts:', marketplacePosts);
-      console.log('Processed forum posts:', forumPosts);
 
       return {
         marketplaceData: marketplacePosts,
@@ -327,23 +490,53 @@ const UserProfile = () => {
   const handleFollow = async (targetUserId) => {
     const verifiedHeader = await getAuthHeaders();
     try {
-      const response = await fetch(`${API_ENDPOINTS.USERS}`, {
-        method: 'PUT',
-        headers: verifiedHeader,
-        body: JSON.stringify({
-          id: currentUser.userId,
-          follower_id: targetUserId
-        })
-      });
+      if (profileData.isFollowing) {
+        // Unfollow
+        const response = await fetch(`${API_ENDPOINTS.USERS}`, {
+          method: 'PUT',
+          headers: verifiedHeader,
+          body: JSON.stringify({
+            id: targetUserId,
+            unfollow_id: currentUser.userId
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to update follow status');
+        if (!response.ok) {
+          throw new Error('Failed to unfollow user');
+        }
+
+        setProfileData(prev => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            followers: prev.stats.followers - 1
+          },
+          isFollowing: false
+        }));
+      } else {
+        // Follow
+        const response = await fetch(`${API_ENDPOINTS.USERS}`, {
+          method: 'PUT',
+          headers: verifiedHeader,
+          body: JSON.stringify({
+            id: targetUserId,
+            follower_id: currentUser.userId
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to follow user');
+        }
+
+        setProfileData(prev => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            followers: prev.stats.followers + 1
+          },
+          isFollowing: true
+        }));
       }
-
-      setProfileData(prev => ({
-        ...prev,
-        isFollowing: !prev.isFollowing
-      }));
     } catch (error) {
       console.error('Error updating follow status:', error);
     }
@@ -380,16 +573,19 @@ const UserProfile = () => {
           <h4>Error Loading Profile</h4>
           <p>{error}</p>
         </div>
-        <Button variant="outline-danger" onClick={() => navigate(-1)}>
-          Go Back
+        <Button
+          variant="danger"
+          onClick={handleBack}
+          className="d-flex align-items-center gap-2 mb-4"
+        >
+          <ArrowLeftShort size={20} /> Back
         </Button>
       </Container>
     );
   }
 
-  // don't render anything if profile data isn't available
   if (!profileData) return null;
-  console.log(profileData);
+  console.log('PROFILE DATA:', profileData);
 
   return (
     <Container className="py-4">
@@ -418,11 +614,23 @@ const UserProfile = () => {
                   <h5 className="mb-0">{profileData.stats?.posts || 0}</h5>
                   <small className="text-muted">Posts</small>
                 </div>
-                <div className="text-center">
+                <div className="text-center"
+                  onClick={() => {
+                    setFollowModalType('followers');
+                    setShowFollowModal(true);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+
                   <h5 className="mb-0">{profileData.stats?.followers || 0}</h5>
                   <small className="text-muted">Followers</small>
                 </div>
-                <div className="text-center">
+                <div className="text-center"
+                  onClick={() => {
+                    setFollowModalType('following');
+                    setShowFollowModal(true);
+                  }}
+                  style={{ cursor: 'pointer' }}>
                   <h5 className="mb-0">{profileData.stats?.following || 0}</h5>
                   <small className="text-muted">Following</small>
                 </div>
@@ -529,7 +737,8 @@ const UserProfile = () => {
                       >
                         <div
                           className="flex-grow-1 cursor-pointer"
-                          onClick={() => navigate(`/marketplace/listing/${post.postsId}`)}
+                          onClick={() => handleViewDetails(post)}
+                          style={{ cursor: 'pointer' }}
                         >
                           <h6 className="mb-0">{post.title}</h6>
                           <small className="text-muted">
@@ -543,7 +752,7 @@ const UserProfile = () => {
                               variant="outline-danger"
                               size="sm"
                               onClick={(e) => {
-                                e.stopPropagation(); // Prevent navigation when clicking delete
+                                e.stopPropagation();
                                 if (window.confirm('Are you sure you want to delete this listing?')) {
                                   handleMarketplaceDelete(post.postsId);
                                 }
@@ -617,6 +826,41 @@ const UserProfile = () => {
           </Accordion>
         </Col>
       </Row>
+      {/* Modal for Detailed View */}
+      <Modal
+        show={showModal}
+        onHide={handleCloseModal}
+        centered
+        size="lg"
+        fullscreen="md-down"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{selectedListing?.title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedListing && (
+            <>
+              <Image
+                src={selectedListing.images_url || '/placeholder.jpg'}
+                alt={selectedListing.title}
+                className="mb-3"
+                style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
+                rounded
+              />
+              <h5 className="text-muted">Description</h5>
+              <p>{selectedListing.product_description}</p>
+              <h5 className="text-muted">Price</h5>
+              <p>${selectedListing.product_price}</p>
+            </>
+          )}
+        </Modal.Body>
+      </Modal>
+      <FollowListModal
+        show={showFollowModal}
+        onHide={() => setShowFollowModal(false)}
+        type={followModalType}
+        userId={profileData?.userId}
+      />
     </Container>
   );
 };
