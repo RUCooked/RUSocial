@@ -21,7 +21,8 @@ import {
   ShieldFill,
   Shop,
   ChatSquareText,
-  PencilSquare
+  PencilSquare,
+  ArrowLeftShort
 } from 'react-bootstrap-icons';
 import { getCurrentUser } from '@aws-amplify/auth';
 import { getAuthHeaders } from '../utils/getJWT';
@@ -113,6 +114,12 @@ const UserProfile = () => {
         // Parse the body string into an object
         const parsedData = JSON.parse(rawData.body);
         console.log(parsedData);
+
+        if (!parsedData.users || parsedData.users.length === 0) {
+          setError('User not found');
+          return;
+        }
+
         // Now we can access the users array
         const userData = parsedData.users[0];
         console.log(userData);
@@ -158,6 +165,14 @@ const UserProfile = () => {
       setShowModal(true);
     } catch (err) {
       console.log('Error fetching user details:', err);
+    }
+  };
+
+  const handleBack = () => {
+    if (document.referrer.includes('/marketplace')) {
+      navigate('/marketplace');
+    } else {
+      navigate(-1);
     }
   };
 
@@ -401,8 +416,12 @@ const UserProfile = () => {
           <h4>Error Loading Profile</h4>
           <p>{error}</p>
         </div>
-        <Button variant="outline-danger" onClick={() => navigate(-1)}>
-          Go Back
+        <Button
+          variant="danger"
+          onClick={handleBack}  
+          className="d-flex align-items-center gap-2 mb-4"
+        >
+          <ArrowLeftShort size={20} /> Back
         </Button>
       </Container>
     );
@@ -640,65 +659,34 @@ const UserProfile = () => {
         </Col>
       </Row>
       {/* Modal for Detailed View */}
-<Modal
-  show={showModal}
-  onHide={handleCloseModal}
-  centered
-  size="lg"
-  fullscreen="md-down"
->
-  <Modal.Header closeButton>
-    <Modal.Title>{selectedListing?.title}</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    {selectedListing && (
-      <>
-        <Image
-          src={selectedListing.images_url || '/placeholder.jpg'}
-          alt={selectedListing.title}
-          className="mb-3"
-          style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
-          rounded
-        />
-        <h5 className="text-muted">Description</h5>
-        <p>{selectedListing.product_description}</p>
-        <h5 className="text-muted">Price</h5>
-        <p>${selectedListing.product_price}</p>
-        {/* <div className="d-flex align-items-center mb-3 border-top pt-3">
-          {userDetails ? (
-            <div className="d-flex align-items-center">
-              {userDetails.image_url ? (
-                <Image
-                  src={userDetails.image_url}
-                  alt={userDetails.username}
-                  roundedCircle
-                  style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                  className="me-3"
-                />
-              ) : (
-                <PersonCircle
-                  size={50}
-                  className="me-3 text-muted"
-                  style={{ width: '50px', height: '50px' }}
-                />
-              )}
-              <div>
-                <p className="mb-1">
-                  <strong>{userDetails.username}</strong>
-                </p>
-                <p className="mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
-                  {userDetails.email}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <p>Loading user details...</p>
+      <Modal
+        show={showModal}
+        onHide={handleCloseModal}
+        centered
+        size="lg"
+        fullscreen="md-down"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{selectedListing?.title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedListing && (
+            <>
+              <Image
+                src={selectedListing.images_url || '/placeholder.jpg'}
+                alt={selectedListing.title}
+                className="mb-3"
+                style={{ width: '100%', height: '500px', objectFit: 'scale-down' }}
+                rounded
+              />
+              <h5 className="text-muted">Description</h5>
+              <p>{selectedListing.product_description}</p>
+              <h5 className="text-muted">Price</h5>
+              <p>${selectedListing.product_price}</p>
+            </>
           )}
-        </div> */}
-      </>
-    )}
-  </Modal.Body>
-</Modal>
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };

@@ -67,14 +67,8 @@ function AppLayout() {
               </RequireAuth>
             }
           />
-        <Route
-            path="/profile"
-            element={
-              <RequireAuth>
-                <Userprofile />
-              </RequireAuth>
-            }
-          />
+       <Route path="/profile" element={<Userprofile />} /> 
+       <Route path="/profile/:userId" element={<Userprofile />} />
         </Routes>
       </main>
     </div>
