@@ -51,6 +51,9 @@ function DirectMessage() {
 
       // POST request to the API
       console.log(JSON.stringify(newMessageData));
+      const escapedStringifiedJson = (JSON.stringify(newMessageData)).replace(/"/g, '\\"');
+      console.log(`"${escapedStringifiedJson}"`);
+
       const response = await axios.post(
         'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/messages',
         JSON.stringify(newMessageData),
