@@ -16,7 +16,7 @@ import './App.css';
 import Settings from './pages/Settings';
 //testing--messages
 import Messages from './pages/Messages';
-import DirectMessages from './pages/DirectMessages';
+import DirectMessages from './pages/directMessages';
 
 import './App.css';
 //main
