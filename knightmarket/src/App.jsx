@@ -11,9 +11,15 @@ import MakeListing from './pages/makeListing';
 import Forum from './pages/Forum';
 import CreatePost from './pages/createPost';
 import Login from './pages/Login';
+import Userprofile from "./pages/Userprofile";
+import './App.css';
 import Settings from './pages/Settings';
+//testing--messages
 import Messages from './pages/Messages';
 import DirectMessages from './pages/DirectMessages';
+
+import './App.css';
+//main
 
 Amplify.configure(awsExports);
 
@@ -66,6 +72,7 @@ function AppLayout() {
               </RequireAuth>
             }
           />
+
          <Route path="/Messages" element={<RequireAuth><Messages /></RequireAuth>} />
          {//<Route path="/Messages" element={<Messages />} />
          }
@@ -74,6 +81,16 @@ function AppLayout() {
               </RequireAuth>
             }
           /> 
+
+        <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <Userprofile />
+              </RequireAuth>
+            }
+          />
+
         </Routes>
       </main>
     </div>
