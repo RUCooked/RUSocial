@@ -68,6 +68,103 @@ const EditableBio = ({ bio, onSave }) => {
   );
 };
 
+const FollowListModal = ({ show, onHide, type, userId }) => {
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!show) return;
+      
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${API_ENDPOINTS.USERS}?id=${userId}&${type}=true`, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+
+        const data = await response.json();
+        const parsedData = JSON.parse(data.body);
+        
+        // Get the appropriate list based on type
+        const userIds = type === 'followers' ? 
+          parsedData.users[0].follower_ids : 
+          parsedData.users[0].following_ids;
+
+        // Fetch details for each user
+        const userDetailsPromises = userIds.map(id =>
+          fetch(`${API_ENDPOINTS.USERS}?id=${id}`, {
+            headers: { 'Content-Type': 'application/json' }
+          }).then(res => res.json())
+        );
+
+        const userDetails = await Promise.all(userDetailsPromises);
+        const processedUsers = userDetails.map(detail => {
+          const parsed = JSON.parse(detail.body);
+          return parsed.users[0];
+        });
+
+        setUsers(processedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [show, userId, type]);
+
+  return (
+    <Modal show={show} onHide={onHide} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>{type.charAt(0).toUpperCase() + type.slice(1)}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {isLoading ? (
+          <div className="text-center py-4">
+            <Spinner animation="border" variant="danger" />
+          </div>
+        ) : (
+          <ListGroup>
+            {users.length > 0 ? (
+              users.map(user => (
+                <ListGroup.Item
+                  key={user.id}
+                  action
+                  onClick={() => {
+                    onHide();
+                    navigate(`/profile/${user.id}`);
+                  }}
+                  className="d-flex align-items-center gap-3"
+                >
+                  <Image
+                    src={user.image_url || "/api/placeholder/40/40"}
+                    roundedCircle
+                    style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                  />
+                  <div>
+                    <strong>{user.username}</strong>
+                    <div className="text-muted small">@{user.email}</div>
+                  </div>
+                </ListGroup.Item>
+              ))
+            ) : (
+              <ListGroup.Item className="text-center text-muted">
+                No {type} yet
+              </ListGroup.Item>
+            )}
+          </ListGroup>
+        )}
+      </Modal.Body>
+    </Modal>
+  );
+};
+
 const UserProfile = () => {
   // Get userId from URL parameters for viewing other profiles
   const { userId: profileId } = useParams();
@@ -81,6 +178,8 @@ const UserProfile = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [followModalType, setFollowModalType] = useState('followers');
 
 
   // Load profile data when component mounts or when profileId changes
@@ -120,13 +219,19 @@ const UserProfile = () => {
           return;
         }
 
-        // Now we can access the users array
+        // now we can access the users array
         const userData = parsedData.users[0];
         console.log(userData);
 
         const postCounts = await fetchPosts(targetUserId);
 
-        // Transform the data to match our component's expected structure
+        const blockCount = userData.blocked_ids.length;
+
+        const isFollowing = !isOwnProfile ?
+          await checkFollowStatus(targetUserId, loggedInUser.userId) :
+          false;
+
+        // transform the data to match our component's expected structure
         const transformedData = {
           username: userData.username,
           email: userData.email,
@@ -134,12 +239,13 @@ const UserProfile = () => {
           profilePicture: userData.image_url || "/api/placeholder/150/150",
           userId: userData.id,
           createdAt: userData.created_at,
+          isFollowing: isFollowing,
           stats: {
             followers: userData.followers || 0,
             following: userData.following || 0,
             marketplacePosts: postCounts.marketplaceCount || 0,
             forumPosts: postCounts.forumCount || 0,
-            blockedUsers: 0,
+            blockedUsers: blockCount || 0,
             posts: postCounts.totalPosts || 0,
             marketplaceData: postCounts.marketplaceData,
             forumData: postCounts.forumData
