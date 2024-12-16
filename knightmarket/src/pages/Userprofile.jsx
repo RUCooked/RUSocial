@@ -76,40 +76,22 @@ const FollowListModal = ({ show, onHide, type, userId }) => {
   useEffect(() => {
     const fetchUsers = async () => {
       if (!show) return;
-      
+
       try {
         setIsLoading(true);
         const queryParam = type === 'followers' ? 'followers=id' : 'following=id';
         const response = await fetch(`${API_ENDPOINTS.USERS}?id=${userId}&${queryParam}`, {
           headers: { 'Content-Type': 'application/json' }
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch users');
         }
-        
+
         const data = await response.json();
         const parsedData = JSON.parse(data.body);
 
         const userList = parsedData.users || [];
-        
-        // // Get the appropriate list based on type
-        // const userIds = type === 'followers' ? 
-        //   parsedData.users[0].follower_ids : 
-        //   parsedData.users[0].following_ids;
-
-        // // Fetch details for each user
-        // const userDetailsPromises = userIds.map(id =>
-        //   fetch(`${API_ENDPOINTS.USERS}?id=${id}`, {
-        //     headers: { 'Content-Type': 'application/json' }
-        //   }).then(res => res.json())
-        // );
-
-        // const userDetails = await Promise.all(userDetailsPromises);
-        // const processedUsers = userDetails.map(detail => {
-        //   const parsed = JSON.parse(detail.body);
-        //   return parsed.users[0];
-        // });
 
         setUsers(userList);
       } catch (error) {
@@ -169,11 +151,9 @@ const FollowListModal = ({ show, onHide, type, userId }) => {
 };
 
 const UserProfile = () => {
-  // Get userId from URL parameters for viewing other profiles
   const { userId: profileId } = useParams();
   const navigate = useNavigate();
 
-  // State management for all profile data and UI states
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState(null);
@@ -185,22 +165,18 @@ const UserProfile = () => {
   const [followModalType, setFollowModalType] = useState('followers');
 
 
-  // Load profile data when component mounts or when profileId changes
   useEffect(() => {
     const loadProfileData = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Get current user info
         const loggedInUser = await getCurrentUser();
         setCurrentUser(loggedInUser);
 
-        // Determine which profile to load
         const targetUserId = profileId || loggedInUser.userId;
         setIsOwnProfile(!profileId || profileId === loggedInUser.userId);
 
-        // Fetch profile data
         const response = await fetch(`${API_ENDPOINTS.USERS}?id=${targetUserId}`, {
           headers: {
             'Content-Type': 'application/json',
@@ -269,7 +245,7 @@ const UserProfile = () => {
 
   useEffect(() => {
     const checkBlockedStatus = async () => {
-      if (profileId) {  // Only check if we're viewing someone else's profile
+      if (profileId) {
         try {
           const currentUser = await getCurrentUser();
           const userResponse = await fetch(`${API_ENDPOINTS.USERS}?id=${currentUser.userId}`);
@@ -283,7 +259,6 @@ const UserProfile = () => {
 
           const blockedIds = parsedData.users[0].blocked_ids || [];
 
-          // If the profile we're trying to view is blocked, redirect
           if (blockedIds.includes(profileId)) {
             setError("You cannot view this user's profile");
             navigate(-1);
@@ -374,13 +349,11 @@ const UserProfile = () => {
     }
   };
 
-  // Add these functions to your UserProfile component
   const handleMarketplaceDelete = async (postId) => {
     try {
       // Get authentication headers
       const verifiedHeader = await getAuthHeaders();
 
-      // Make delete request to marketplace API
       const response = await fetch(`${API_ENDPOINTS.MARKETPLACE_POSTS}`, {
         method: 'DELETE',
         headers: verifiedHeader,
@@ -393,8 +366,6 @@ const UserProfile = () => {
         throw new Error('Failed to delete marketplace post');
       }
 
-      // If deletion was successful, update the local state
-      // We'll filter out the deleted post from our current data
       setProfileData(prevData => ({
         ...prevData,
         stats: {
@@ -407,7 +378,6 @@ const UserProfile = () => {
 
     } catch (error) {
       console.error('Error deleting marketplace post:', error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -477,12 +447,10 @@ const UserProfile = () => {
       // For marketplace posts
       if (marketplaceRawData.body) {
         try {
-          // If body is a string, parse it
           const parsedMarketplace = typeof marketplaceRawData.body === 'string'
             ? JSON.parse(marketplaceRawData.body)
             : marketplaceRawData.body;
 
-          // Now we can safely use the data
           marketplacePosts = Array.isArray(parsedMarketplace)
             ? parsedMarketplace.filter(post => post.user_id === userId)
             : [];
@@ -491,15 +459,12 @@ const UserProfile = () => {
         }
       }
 
-      // For forum posts
       if (forumRawData.body) {
         try {
-          // If body is a string, parse it
           const parsedForum = typeof forumRawData.body === 'string'
             ? JSON.parse(forumRawData.body)
             : forumRawData.body;
 
-          // Now we can safely use the data
           forumPosts = Array.isArray(parsedForum)
             ? parsedForum.filter(post => post.user_id === userId)
             : [];
@@ -507,10 +472,6 @@ const UserProfile = () => {
           console.error('Error parsing forum data:', e);
         }
       }
-
-      // Log the processed data
-      console.log('Processed marketplace posts:', marketplacePosts);
-      console.log('Processed forum posts:', forumPosts);
 
       return {
         marketplaceData: marketplacePosts,
@@ -544,7 +505,6 @@ const UserProfile = () => {
           throw new Error('Failed to unfollow user');
         }
 
-        // Update local state for unfollow
         setProfileData(prev => ({
           ...prev,
           stats: {
@@ -568,7 +528,6 @@ const UserProfile = () => {
           throw new Error('Failed to follow user');
         }
 
-        // Update local state for follow
         setProfileData(prev => ({
           ...prev,
           stats: {
@@ -580,7 +539,6 @@ const UserProfile = () => {
       }
     } catch (error) {
       console.error('Error updating follow status:', error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -626,7 +584,6 @@ const UserProfile = () => {
     );
   }
 
-  // don't render anything if profile data isn't available
   if (!profileData) return null;
   console.log('PROFILE DATA:', profileData);
 
@@ -658,22 +615,22 @@ const UserProfile = () => {
                   <small className="text-muted">Posts</small>
                 </div>
                 <div className="text-center"
-                onClick={() => {
-                  setFollowModalType('followers');
-                  setShowFollowModal(true);
-                }}
-                style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    setFollowModalType('followers');
+                    setShowFollowModal(true);
+                  }}
+                  style={{ cursor: 'pointer' }}
                 >
 
                   <h5 className="mb-0">{profileData.stats?.followers || 0}</h5>
                   <small className="text-muted">Followers</small>
                 </div>
                 <div className="text-center"
-                onClick={() => {
-                  setFollowModalType('following');
-                  setShowFollowModal(true);
-                }}
-                style={{ cursor: 'pointer' }}>
+                  onClick={() => {
+                    setFollowModalType('following');
+                    setShowFollowModal(true);
+                  }}
+                  style={{ cursor: 'pointer' }}>
                   <h5 className="mb-0">{profileData.stats?.following || 0}</h5>
                   <small className="text-muted">Following</small>
                 </div>
