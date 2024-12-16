@@ -158,6 +158,63 @@ const UserProfile = () => {
     loadProfileData();
   }, [profileId]);
 
+  useEffect(() => {
+    const checkBlockedStatus = async () => {
+      if (profileId) {  // Only check if we're viewing someone else's profile
+        try {
+          const currentUser = await getCurrentUser();
+          const userResponse = await fetch(`${API_ENDPOINTS.USERS}?id=${currentUser.userId}`);
+          const userData = await userResponse.json();
+          const parsedData = JSON.parse(userData.body);
+
+          if (!parsedData.users || !parsedData.users[0]) {
+            console.error('Could not fetch current user data');
+            return;
+          }
+
+          const blockedIds = parsedData.users[0].blocked_ids || [];
+
+          // If the profile we're trying to view is blocked, redirect
+          if (blockedIds.includes(profileId)) {
+            setError("You cannot view this user's profile");
+            navigate(-1);
+          }
+        } catch (error) {
+          console.error('Error checking blocked status:', error);
+        }
+      }
+    };
+
+    checkBlockedStatus();
+  }, [profileId, navigate]);
+
+
+  const checkFollowStatus = async (targetUserId, currentUserId) => {
+    try {
+      const response = await fetch(
+        `${API_ENDPOINTS.USERS}?id=${targetUserId}&follower_id=${currentUserId}`,
+        {
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to check follow status');
+      }
+
+      const data = await response.json();
+      const parsedData = JSON.parse(data.body);
+
+      if (parsedData.users && parsedData.users[0]) {
+        const followerIds = parsedData.users[0].follower_ids;
+        return followerIds.includes(currentUserId);
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      return false;
+    }
+  };
 
   const handleViewDetails = async (listing) => {
     try {
@@ -363,25 +420,58 @@ const UserProfile = () => {
   const handleFollow = async (targetUserId) => {
     const verifiedHeader = await getAuthHeaders();
     try {
-      const response = await fetch(`${API_ENDPOINTS.USERS}`, {
-        method: 'PUT',
-        headers: verifiedHeader,
-        body: JSON.stringify({
-          id: currentUser.userId,
-          follower_id: targetUserId
-        })
-      });
+      if (profileData.isFollowing) {
+        // Unfollow
+        const response = await fetch(`${API_ENDPOINTS.USERS}`, {
+          method: 'PUT',
+          headers: verifiedHeader,
+          body: JSON.stringify({
+            id: targetUserId,
+            unfollow_id: currentUser.userId
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to update follow status');
+        if (!response.ok) {
+          throw new Error('Failed to unfollow user');
+        }
+
+        // Update local state for unfollow
+        setProfileData(prev => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            followers: prev.stats.followers - 1
+          },
+          isFollowing: false
+        }));
+      } else {
+        // Follow
+        const response = await fetch(`${API_ENDPOINTS.USERS}`, {
+          method: 'PUT',
+          headers: verifiedHeader,
+          body: JSON.stringify({
+            id: targetUserId,
+            follower_id: currentUser.userId
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to follow user');
+        }
+
+        // Update local state for follow
+        setProfileData(prev => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            followers: prev.stats.followers + 1
+          },
+          isFollowing: true
+        }));
       }
-
-      setProfileData(prev => ({
-        ...prev,
-        isFollowing: !prev.isFollowing
-      }));
     } catch (error) {
       console.error('Error updating follow status:', error);
+      // You might want to show an error message to the user here
     }
   };
 
@@ -418,7 +508,7 @@ const UserProfile = () => {
         </div>
         <Button
           variant="danger"
-          onClick={handleBack}  
+          onClick={handleBack}
           className="d-flex align-items-center gap-2 mb-4"
         >
           <ArrowLeftShort size={20} /> Back
@@ -429,7 +519,7 @@ const UserProfile = () => {
 
   // don't render anything if profile data isn't available
   if (!profileData) return null;
-  console.log(profileData);
+  console.log('PROFILE DATA:', profileData);
 
   return (
     <Container className="py-4">
