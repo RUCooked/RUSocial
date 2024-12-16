@@ -57,16 +57,18 @@ function Messages({ currentUser }) {
       setCreateError('Please enter a valid username.');
       return;
     }
-
+  
     try {
       setCreateError('');
       const newConversation = {
         user1: currentUser,
         user2: newUser,
       };
-
+  
+      // Log the data being sent for debugging purposes
+      console.log('Creating new conversation:', newConversation);
+  
       // Send API request to create a new conversation
-      console.log(JSON.stringify(newConversation));
       const response = await axios.post(
         'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/conversation',
         JSON.stringify(newConversation),
@@ -76,17 +78,24 @@ function Messages({ currentUser }) {
           },
         }
       );
-
+  
       console.log('Conversation created:', response.data);
-
-      // Refresh the conversations list
-      setNewUser('');
-      fetchConversations();
+      // Check for a successful response
+      if (response.status === 200) {
+        // Refresh the conversations list
+        setNewUser('');
+        fetchConversations();
+      } else {
+        // If status is not 200, log the error
+        setCreateError('Failed to create conversation. Please try again.');
+        console.error('API Error:', response.data);
+      }
     } catch (err) {
-      console.error('Error creating conversation:', err.message);
+      console.error('Error creating conversation:', err.response || err.message);
       setCreateError('Failed to create a conversation. Please try again.');
     }
   };
+  
 
   useEffect(() => {
     fetchConversations();
