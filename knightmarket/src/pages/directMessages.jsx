@@ -12,7 +12,7 @@ function DirectMessage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch messages from the JSON file using get_messages.js
+  // Fetch messages from the API
   const fetchMessages = async () => {
     setLoading(true);
     setError('');
@@ -38,7 +38,7 @@ function DirectMessage() {
     }
   };
 
-  // Send a new message and update the JSON file using post_messages.js
+  // Send a new message
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
@@ -51,7 +51,6 @@ function DirectMessage() {
 
       // POST request to the API
       console.log(JSON.stringify(newMessageData));
-
       const response = await axios.post(
         'https://r0s9cmfju1.execute-api.us-east-2.amazonaws.com/cognito-testing/messages',
         JSON.stringify(newMessageData),
